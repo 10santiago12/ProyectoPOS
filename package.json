@@ -31,7 +31,11 @@
     "expo-system-ui": "~4.0.8",
     "expo-web-browser": "~14.0.2",
     "firebase": "^11.5.0",
+<<<<<<< HEAD
     "react": "18.3.1",
+=======
+    "react": "^18.3.1",
+>>>>>>> 358febb61444fea5947ab4169b0f406d80c9ce9b
     "react-dom": "18.3.1",
     "react-native": "^0.76.7",
     "react-native-gesture-handler": "~2.20.2",

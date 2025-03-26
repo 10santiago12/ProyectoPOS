@@ -1,23 +1,28 @@
-// auth/index.tsx
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { 
   View, 
   Text, 
   TextInput, 
   TouchableOpacity, 
-  StyleSheet 
+  StyleSheet,
+  Alert 
 } from 'react-native';
+import { AuthContext } from '../../context/AuthContext';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { login } = useContext(AuthContext);
 
-  // Por ahora no manejamos lógica de autenticación,
-  // sólo la UI. Más adelante podemos añadirla.
-  
-  const handleLogin = () => {
-    // Aquí irá la lógica para el login cuando la implementemos
-    console.log('Iniciar sesión con:', email, password);
+  const handleLogin = async () => {
+    try {
+      await login(email, password);
+      // Navegar a la pantalla principal después del login exitoso
+      // router.replace('/home');
+    } catch (error) {
+      Alert.alert("Error", "No se pudo iniciar sesión. Verifica tus credenciales.");
+      console.error(error);
+    }
   };
 
   return (
@@ -82,9 +87,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center'
   },
-    buttonText: {
-      color: '#fff',
-      fontSize: 16,
-      fontWeight: 'bold'
-    }
-  });
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold'
+  }
+});
