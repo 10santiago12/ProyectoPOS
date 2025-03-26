@@ -1,17 +1,10 @@
 import { User } from "@/interfaces/common";
-import { 
-getAuth, 
-createUserWithEmailAndPassword, 
-signInWithEmailAndPassword,
-signOut,
-updateProfile,
-User as FirebaseUser
-} from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,signOut,updateProfile,User as FirebaseUser} from "firebase/auth";
 import { getFirestore, doc, setDoc, updateDoc } from "firebase/firestore"; 
 import { createContext, useContext } from "react";
 import app from "../utils/FirebaseConfig";
 import { router } from "expo-router";
-
+import React from "react"; 
 interface AuthContextType {
 login: (email: string, password: string) => Promise<void>;
 register: (user: User) => Promise<void>;
@@ -31,7 +24,7 @@ const db = getFirestore(app);
 const login = async (email: string, password: string) => {
     try {
     await signInWithEmailAndPassword(auth, email, password);
-    router.replace("/home");
+    console.log("Login successful");
     } catch (error: any) {
     console.error("Login error:", error.message);
     throw error;
@@ -61,7 +54,7 @@ const register = async (user: User) => {
         createdAt: new Date()
     });
 
-    router.replace("/home");
+    console.log("Registration successful");
     } catch (error: any) {
     console.error("Registration error:", error.message);
     throw error;
@@ -111,7 +104,7 @@ const updateRole = async (role: "chef" | "client" | "cashier") => {
 const logout = async () => {
     try {
     await signOut(auth);
-    router.replace("/login");
+    console.log("Logout successful");
     } catch (error: any) {
     console.error("Logout error:", error.message);
     throw error;
