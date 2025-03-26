@@ -1,9 +1,9 @@
 import { User } from "@/interfaces/common";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,signOut,updateProfile,User as FirebaseUser} from "firebase/auth";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,signOut,updateProfile} from "firebase/auth";
 import { getFirestore, doc, setDoc, updateDoc } from "firebase/firestore"; 
 import { createContext, useContext } from "react";
 import app from "../utils/FirebaseConfig";
-import { router } from "expo-router";
+//import { router } from "expo-router";
 import React from "react"; 
 interface AuthContextType {
 login: (email: string, password: string) => Promise<void>;
