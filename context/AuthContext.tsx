@@ -3,7 +3,7 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,sig
 import { getFirestore, doc, setDoc, updateDoc } from "firebase/firestore"; 
 import { createContext, useContext } from "react";
 import app from "../utils/FirebaseConfig";
-//import { router } from "expo-router";
+import { router } from "expo-router"; 
 import React from "react"; 
 interface AuthContextType {
 login: (email: string, password: string) => Promise<void>;
@@ -33,33 +33,43 @@ const login = async (email: string, password: string) => {
 
 const register = async (user: User) => {
     try {
-    // 1. Crear usuario en Authentication
-    const userCredential = await createUserWithEmailAndPassword(
-        auth, 
-        user.email, 
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        user.email,
         user.password
-    );
-    
-    // 2. Actualizar el perfil con el nombre
-    await updateProfile(userCredential.user, {
-        displayName: user.name
-    });
-
-    // 3. Guardar información adicional en Firestore
-    const userDocRef = doc(db, "users", userCredential.user.uid);
-    await setDoc(userDocRef, {
+      );
+  
+      await updateProfile(userCredential.user, {
+        displayName: user.name,
+      });
+  
+      const userDocRef = doc(db, "users", userCredential.user.uid);
+      await setDoc(userDocRef, {
         name: user.name,
         email: user.email,
         role: user.role,
-        createdAt: new Date()
-    });
-
-    console.log("Registration successful");
+        createdAt: new Date(),
+      });
+  
+      console.log("Registration successful");
+      
+        // Redirect based on user role
+      switch (user.role) {
+        case "chef":
+          router.replace("/(app)/chef");
+          break;
+        case "client":
+          router.replace("/(app)/client");
+          break;
+        case "cashier":
+          router.replace("/(app)/cashier");
+          break;
+      }
     } catch (error: any) {
-    console.error("Registration error:", error.message);
-    throw error;
+      console.error("Registration error:", error.message);
+      throw error;
     }
-};
+  };
 
 const updateUser = async (user: Partial<User>) => {
     try {
