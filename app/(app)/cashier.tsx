@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { router } from "expo-router";
 import {
   View,
   Text,
@@ -14,6 +16,7 @@ export default function CashierScreen() {
   const [description, setDescription] = useState("");
   const [type, setType] = useState("");
   const [price, setPrice] = useState("");
+  const { logout } = useAuth();
 
   const mockProducts = [
     {
@@ -108,6 +111,14 @@ export default function CashierScreen() {
         )}
         contentContainerStyle={{ paddingBottom: 30 }}
       />
+      <View style={styles.logoutContainer}>
+        <TouchableOpacity onPress={async () => {
+          await logout();
+          router.replace("/auth");
+        }} style={styles.logoutButton}>
+          <Text style={styles.logoutText}>🔓 Cerrar sesión</Text>
+        </TouchableOpacity>
+      </View>
     </ScrollView>
   );
 }
@@ -219,5 +230,21 @@ const styles = StyleSheet.create({
     color: "#1d4ed8",
     fontWeight: "600",
     fontSize: 13,
+  },
+  logoutContainer: {
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 40,
+  },
+  logoutButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: "#e2e8f0",
+    borderRadius: 8,
+  },
+  logoutText: {
+    color: "#334155",
+    fontWeight: "600",
+    fontSize: 14,
   },
 });
