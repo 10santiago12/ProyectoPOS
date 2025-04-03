@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  Button,
   TouchableOpacity,
   StyleSheet,
   ScrollView,
@@ -51,7 +50,7 @@ export default function CashierScreen() {
         placeholder="Título del producto"
         value={title}
         onChangeText={setTitle}
-        placeholderTextColor="#888"
+        placeholderTextColor="#94a3b8"
       />
 
       <TextInput
@@ -60,7 +59,7 @@ export default function CashierScreen() {
         value={description}
         onChangeText={setDescription}
         multiline
-        placeholderTextColor="#888"
+        placeholderTextColor="#94a3b8"
       />
 
       <TextInput
@@ -68,7 +67,7 @@ export default function CashierScreen() {
         placeholder="Tipo de producto"
         value={type}
         onChangeText={setType}
-        placeholderTextColor="#888"
+        placeholderTextColor="#94a3b8"
       />
 
       <TextInput
@@ -77,7 +76,7 @@ export default function CashierScreen() {
         keyboardType="numeric"
         value={price}
         onChangeText={setPrice}
-        placeholderTextColor="#888"
+        placeholderTextColor="#94a3b8"
       />
 
       <TouchableOpacity style={styles.saveButton} onPress={() => {}}>
@@ -115,14 +114,14 @@ export default function CashierScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 32,
-    backgroundColor: "#f0f4f8",
+    padding: 28,
+    backgroundColor: "#f8fafc",
     flexGrow: 1,
   },
   header: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#1a202c",
+    color: "#1e3a8a",
     marginBottom: 32,
     textAlign: "center",
   },
@@ -132,42 +131,42 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   photoButton: {
-    backgroundColor: "#ffffff",
-    padding: 16,
-    borderRadius: 12,
+    backgroundColor: "#e0f2fe",
+    padding: 14,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#bae6fd",
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
-    marginHorizontal: 6,
+    marginHorizontal: 5,
   },
   photoButtonText: {
-    color: "#3182ce",
+    color: "#0369a1",
     fontWeight: "600",
     fontSize: 14,
   },
   input: {
     backgroundColor: "#ffffff",
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 16,
     marginBottom: 16,
-    color: "#1a202c",
+    color: "#0f172a",
     fontSize: 16,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#cbd5e1",
   },
   saveButton: {
-    backgroundColor: "#3182ce",
+    backgroundColor: "#3b82f6",
     padding: 16,
     borderRadius: 12,
     marginBottom: 32,
     alignItems: "center",
-    elevation: 2,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    elevation: 2,
   },
   saveButtonText: {
     color: "#ffffff",
@@ -178,7 +177,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#1a202c",
+    color: "#1e3a8a",
     marginBottom: 24,
   },
   productCard: {
@@ -188,33 +187,36 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     flexDirection: "row",
     alignItems: "center",
-    elevation: 1,
+    borderColor: "#e2e8f0",
+    borderWidth: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
+    shadowOpacity: 0.06,
+    shadowRadius: 2,
+    elevation: 1,
   },
   productTitle: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#1a202c",
+    fontWeight: "700",
+    color: "#0f172a",
     marginBottom: 4,
   },
   productText: {
-    color: "#4a5568",
+    color: "#64748b",
     fontSize: 14,
     marginBottom: 2,
   },
   editButton: {
-    backgroundColor: "#edf2f7",
+    backgroundColor: "#f1f5f9",
     paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#e2e8f0",
+    borderColor: "#cbd5e1",
+    marginLeft: 12,
   },
   editButtonText: {
-    color: "#3182ce",
+    color: "#1d4ed8",
     fontWeight: "600",
     fontSize: 13,
   },
