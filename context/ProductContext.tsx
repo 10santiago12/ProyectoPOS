@@ -32,7 +32,7 @@ export const ProductsProvider = ({ children }: { children: React.ReactNode }) =>
       });
       setProducts((prevProducts) => [...prevProducts, { id: docRef.id, ...product }]);
     } catch (error: any) {
-      console.error("Error adding product: ", error.message);
+      console.error("Error adding products: ", error.message);
       throw error;
     }
   };
