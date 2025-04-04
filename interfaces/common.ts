@@ -4,3 +4,13 @@ export interface User {
     password:string, 
     role:"chef"|"client"|"cashier"
 }
+
+export interface Product {
+    id?: string;
+    title: string;
+    description: string;
+    type: string;
+    price: string;
+    photo?: string;
+    createdAt?: Date;
+}

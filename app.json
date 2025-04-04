@@ -23,17 +23,24 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
-      "expo-router",
-      [
-        "expo-splash-screen",
-        {
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 200,
-          "resizeMode": "contain",
-          "backgroundColor": "#ffffff"
-        }
-      ]
-    ],
+  "expo-router",
+  [
+    "expo-splash-screen",
+    {
+      "image": "./assets/images/splash-icon.png",
+      "imageWidth": 200,
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    }
+  ],
+  [
+    "expo-image-picker",
+    {
+      "photosPermission": "La aplicación necesita acceso a tus fotos para agregar imágenes a los productos.",
+      "cameraPermission": "La aplicación necesita acceso a tu cámara para tomar fotos de productos."
+    }
+  ]
+],
     "experiments": {
       "typedRoutes": true
     }

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useProducts } from "@/context/ProductContext";
 import { router } from "expo-router";
 import {
   View,
@@ -9,6 +10,9 @@ import {
   StyleSheet,
   ScrollView,
   FlatList,
+  Image,
+  Alert,
+  ActivityIndicator
 } from "react-native";
 
 export default function CashierScreen() {
@@ -16,44 +20,102 @@ export default function CashierScreen() {
   const [description, setDescription] = useState("");
   const [type, setType] = useState("");
   const [price, setPrice] = useState("");
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const { logout } = useAuth();
+  const { products, addProduct, pickImage, takePhoto } = useProducts();
 
-  const mockProducts = [
-    {
-      id: "1",
-      title: "Hamburguesa",
-      description: "Doble carne con queso",
-      type: "Comida rápida",
-      price: "25000",
-    },
-    {
-      id: "2",
-      title: "Jugo natural",
-      description: "Jugo de naranja sin azúcar",
-      type: "Bebida",
-      price: "8000",
-    },
-  ];
+  const handleSaveProduct = async () => {
+    if (!title || !price) {
+      Alert.alert("Error", "Por favor complete al menos el título y el precio");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await addProduct(
+        { title, description, type, price },
+        photoUri || null
+      );
+      
+      // Limpiar formulario
+      setTitle("");
+      setDescription("");
+      setType("");
+      setPrice("");
+      setPhotoUri(null);
+      
+      Alert.alert("Éxito", "Producto guardado correctamente");
+    } catch (error) {
+      Alert.alert("Error", "No se pudo guardar el producto");
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleTakePhoto = async () => {
+    try {
+      const uri = await takePhoto();
+      if (uri) setPhotoUri(uri);
+    } catch (error) {
+      Alert.alert("Error", "No se pudo acceder a la cámara");
+      console.error(error);
+    }
+  };
+
+  const handlePickImage = async () => {
+    try {
+      const uri = await pickImage();
+      if (uri) setPhotoUri(uri);
+    } catch (error) {
+      Alert.alert("Error", "No se pudo acceder a la galería");
+      console.error(error);
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>🧾 Agregar Producto</Text>
 
       <View style={styles.photoSection}>
-        <TouchableOpacity style={styles.photoButton} onPress={() => {}}>
-          <Text style={styles.photoButtonText}>📷 Tomar Foto</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.photoButton} onPress={() => {}}>
-          <Text style={styles.photoButtonText}>🖼️ Adjuntar Foto</Text>
-        </TouchableOpacity>
+        {photoUri ? (
+          <View style={styles.imagePreview}>
+            <Image source={{ uri: photoUri }} style={styles.image} />
+            <TouchableOpacity 
+              style={styles.removePhotoButton} 
+              onPress={() => setPhotoUri(null)}
+            >
+              <Text style={styles.removePhotoText}>❌ Eliminar foto</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <>
+            <TouchableOpacity 
+              style={styles.photoButton} 
+              onPress={handleTakePhoto}
+              disabled={isLoading}
+            >
+              <Text style={styles.photoButtonText}>📷 Tomar Foto</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.photoButton} 
+              onPress={handlePickImage}
+              disabled={isLoading}
+            >
+              <Text style={styles.photoButtonText}>🖼️ Elegir de Galería</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
 
       <TextInput
         style={styles.input}
-        placeholder="Título del producto"
+        placeholder="Título del producto*"
         value={title}
         onChangeText={setTitle}
         placeholderTextColor="#94a3b8"
+        editable={!isLoading}
       />
 
       <TextInput
@@ -63,6 +125,7 @@ export default function CashierScreen() {
         onChangeText={setDescription}
         multiline
         placeholderTextColor="#94a3b8"
+        editable={!isLoading}
       />
 
       <TextInput
@@ -71,26 +134,36 @@ export default function CashierScreen() {
         value={type}
         onChangeText={setType}
         placeholderTextColor="#94a3b8"
+        editable={!isLoading}
       />
 
       <TextInput
         style={styles.input}
-        placeholder="Precio"
+        placeholder="Precio*"
         keyboardType="numeric"
         value={price}
         onChangeText={setPrice}
         placeholderTextColor="#94a3b8"
+        editable={!isLoading}
       />
 
-      <TouchableOpacity style={styles.saveButton} onPress={() => {}}>
-        <Text style={styles.saveButtonText}>💾 Guardar Producto</Text>
+      <TouchableOpacity 
+        style={[styles.saveButton, isLoading && styles.disabledButton]} 
+        onPress={handleSaveProduct}
+        disabled={isLoading}
+      >
+        {isLoading ? (
+          <ActivityIndicator color="#ffffff" />
+        ) : (
+          <Text style={styles.saveButtonText}>💾 Guardar Producto</Text>
+        )}
       </TouchableOpacity>
 
       <Text style={styles.sectionTitle}>🧺 Productos Agregados</Text>
 
       <FlatList
-        data={mockProducts}
-        keyExtractor={(item) => item.id}
+        data={products}
+        keyExtractor={(item) => item.id!}
         renderItem={({ item }) => (
           <View style={styles.productCard}>
             <View style={{ flex: 1 }}>
@@ -98,12 +171,19 @@ export default function CashierScreen() {
               <Text style={styles.productText}>{item.description}</Text>
               <Text style={styles.productText}>Tipo: {item.type}</Text>
               <Text style={styles.productText}>Precio: ${item.price}</Text>
+              {item.photo && (
+                <Image 
+                  source={{ uri: item.photo }} 
+                  style={styles.productImage} 
+                />
+              )}
             </View>
             <TouchableOpacity
               style={styles.editButton}
               onPress={() => {
-                // Aquí se implementará la funcionalidad de editar más adelante
+                // TODO: Implementar edición
               }}
+              disabled={isLoading}
             >
               <Text style={styles.editButtonText}>✏️ Editar</Text>
             </TouchableOpacity>
@@ -111,11 +191,16 @@ export default function CashierScreen() {
         )}
         contentContainerStyle={{ paddingBottom: 30 }}
       />
+
       <View style={styles.logoutContainer}>
-        <TouchableOpacity onPress={async () => {
-          await logout();
-          router.replace("/auth");
-        }} style={styles.logoutButton}>
+        <TouchableOpacity 
+          onPress={async () => {
+            await logout();
+            router.replace("/auth");
+          }} 
+          style={styles.logoutButton}
+          disabled={isLoading}
+        >
           <Text style={styles.logoutText}>🔓 Cerrar sesión</Text>
         </TouchableOpacity>
       </View>
@@ -179,6 +264,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  disabledButton: {
+    backgroundColor: "#9ca3af",
+  },
   saveButtonText: {
     color: "#ffffff",
     fontWeight: "bold",
@@ -217,6 +305,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginBottom: 2,
   },
+  productImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+    marginTop: 8,
+  },
   editButton: {
     backgroundColor: "#f1f5f9",
     paddingVertical: 8,
@@ -246,5 +340,25 @@ const styles = StyleSheet.create({
     color: "#334155",
     fontWeight: "600",
     fontSize: 14,
+  },
+  imagePreview: {
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  image: {
+    width: 200,
+    height: 200,
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  removePhotoButton: {
+    backgroundColor: '#fee2e2',
+    padding: 8,
+    borderRadius: 6,
+  },
+  removePhotoText: {
+    color: '#b91c1c',
+    fontWeight: '600',
   },
 });
