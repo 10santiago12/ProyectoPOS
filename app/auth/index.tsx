@@ -12,27 +12,34 @@ export default function LoginScreen() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [name, setName] = useState('');
   const [role, setRole] = useState<UserRole>('client');
+  const [error, setError] = useState('');
   const { login, register } = useContext(AuthContext);
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields");
+      setError("Please fill in all fields.");
       return;
     }
+    setError('');
 
     try {
       await login(email, password);
       Alert.alert("Success", "Login successful");
     } catch (error) {
-      Alert.alert("Error", "Login failed. Please check your credentials.");
+      setError("Invalid email or password. Please try again.");
     }
   };
 
   const handleRegister = async () => {
     if (!name || !email || !password) {
-      Alert.alert("Error", "Please fill in all fields");
+      setError("Please fill in all fields.");
       return;
     }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters long.");
+      return;
+    }
+    setError('');
 
     const newUser: User = {
       name,
@@ -46,13 +53,24 @@ export default function LoginScreen() {
       Alert.alert("Success", "Account created successfully");
       setIsRegistering(false);
     } catch (error) {
-      Alert.alert("Error", "Registration failed. Try again.");
+      if (error instanceof Error) {
+        if (error.message.includes("email-already-in-use")) {
+          setError("This email is already registered.");
+        } else {
+          setError("Registration failed. Try again.");
+        }
+      } else {
+        setError("An unexpected error occurred.");
+      }
     }
+    
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{isRegistering ? "Create Account" : "Welcome"}</Text>
+
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       {isRegistering && (
         <>
@@ -177,5 +195,10 @@ const styles = StyleSheet.create({
     color: '#6200ee',
     fontSize: 14,
     fontWeight: '500',
+  },
+  errorText: {
+    color: 'red',
+    fontSize: 14,
+    marginBottom: 10,
   },
 });

@@ -97,7 +97,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const currentUser = auth.currentUser;
       if (!currentUser) throw new Error("No user logged in");
 
-      // Actualizar en Authentication si hay cambios en nombre o email
       if (user.name) {
         await updateProfile(currentUser, {
           displayName: user.name
