@@ -6,6 +6,7 @@ export default function AppLayout() {
     <Stack>
       <Stack.Screen name="index" options={{title:"Home", headerShown:false}}/>
       <Stack.Screen name="cashier" options={{title:"Cashier", headerShown:false}}/>
+      <Stack.Screen name="client" options={{title:"Client", headerShown:false}}/>
     </Stack>
   );
 }

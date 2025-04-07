@@ -2,18 +2,9 @@ import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useProducts } from "@/context/ProductContext";
 import { router } from "expo-router";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  FlatList,
-  Image,
-  Alert,
-  ActivityIndicator
-} from "react-native";
+import {View,
+  Text,TextInput,TouchableOpacity,StyleSheet,ScrollView,FlatList,Image,Alert,ActivityIndicator,
+  Platform} from "react-native";
 
 export default function CashierScreen() {
   const [title, setTitle] = useState("");
@@ -55,14 +46,29 @@ export default function CashierScreen() {
   };
 
   const handleTakePhoto = async () => {
-    try {
-      const uri = await takePhoto();
-      if (uri) setPhotoUri(uri);
-    } catch (error) {
-      Alert.alert("Error", "No se pudo acceder a la cámara");
-      console.error(error);
+  if (Platform.OS === 'web') {
+    const file = await new Promise<File | null>((resolve) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.capture = 'environment';
+      input.onchange = () => resolve(input.files?.[0] || null);
+      input.click();
+    });
+
+    if (file) {
+      const webUri = URL.createObjectURL(file);
+      setPhotoUri(webUri);
+      return webUri;
     }
-  };
+    return undefined;
+  } else {
+    // Comportamiento normal para móvil
+    const uri = await takePhoto();
+    if (uri) setPhotoUri(uri);
+    return uri;
+  }
+};
 
   const handlePickImage = async () => {
     try {

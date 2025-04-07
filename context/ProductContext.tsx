@@ -1,18 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { Product } from "@/interfaces/common"; 
 import { getFirestore, collection, addDoc, onSnapshot } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as ImagePicker from 'expo-image-picker';
 import app from "../utils/FirebaseConfig";
-
-export interface Product {
-  id?: string;
-  title: string;
-  description: string;
-  type: string;
-  price: string;
-  photo?: string | null;
-  createdAt?: Date;
-}
 
 interface ProductsContextType {
   products: Product[];
