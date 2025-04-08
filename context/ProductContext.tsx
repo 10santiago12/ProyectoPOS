@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Product } from "@/interfaces/common"; 
-import { getFirestore, collection, addDoc, onSnapshot } from "firebase/firestore";
+import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as ImagePicker from 'expo-image-picker';
 import app from "../utils/FirebaseConfig";
@@ -8,6 +8,7 @@ import app from "../utils/FirebaseConfig";
 interface ProductsContextType {
   products: Product[];
   addProduct: (product: Omit<Product, 'id'>, photoUri?: string | null) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>; // Nueva función
   pickImage: () => Promise<string | undefined>;
   takePhoto: () => Promise<string | undefined>;
 }
@@ -45,7 +46,6 @@ export const ProductsProvider = ({ children }: { children: React.ReactNode }) =>
     try {
       let photoURL = null;
       
-      // Subir imagen si existe
       if (photoUri) {
         photoURL = await uploadImage(photoUri);
       }
@@ -98,6 +98,15 @@ export const ProductsProvider = ({ children }: { children: React.ReactNode }) =>
       return undefined;
     }
   };
+  const deleteProduct = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "products", id));
+      return Promise.resolve();
+    } catch (error: any) {
+      console.error("Error deleting product: ", error.message);
+      return Promise.reject(error);
+    }
+  };
 
   useEffect(() => {
     const unsubscribe = onSnapshot(productsCollection, (snapshot) => {
@@ -111,7 +120,13 @@ export const ProductsProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   return (
-    <ProductContext.Provider value={{ products, addProduct, pickImage, takePhoto }}>
+    <ProductContext.Provider value={{ 
+      products, 
+      addProduct, 
+      deleteProduct, 
+      pickImage, 
+      takePhoto 
+    }}>
       {children}
     </ProductContext.Provider>
   );

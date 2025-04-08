@@ -6,14 +6,17 @@ role:"chef"|"client"|"cashier"
 }
 
 export interface Product {
-id?: string;
-title: string;
-description: string;
-type: string;
-price: string;
-photo?: string;
-createdAt?: Date;
+    id?: string;
+    title: string;
+    description: string;
+    type: ProductType;
+    price: string;
+    photo?: string;
+    createdAt?: Date;
+    createdBy?: string;
 }
+
+export type ProductType = "starter" | "fastfood" | "drink" | "dessert";
 
 export interface OrderItem {
     productId: string;

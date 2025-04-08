@@ -65,7 +65,7 @@ export default function CustomerScreen() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
 
-  const categories = ['Todos', 'Comida rápida', 'Bebidas', 'Postres'];
+  const categories = ['Todos', 'Entradas','Comida rápida', 'Bebidas', 'Postres'];
 
   const filteredProducts = selectedCategory === 'Todos' 
     ? products 
@@ -214,6 +214,7 @@ export default function CustomerScreen() {
             <TouchableOpacity style={styles.orderButton} onPress={() => alert('Pedido realizado!')}>
               <Text style={styles.orderButtonText}>Realizar Pedido</Text>
             </TouchableOpacity>
+            
           </View>
         )}
       </View>
