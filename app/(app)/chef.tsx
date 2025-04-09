@@ -11,6 +11,15 @@ export default function ChefScreen() {
     (order) => order.status === "Ordered" || order.status === "Preparing"
   );
 
+  if (filteredOrders.length === 0) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.header}>Chef's Orders</Text>
+        <Text style={styles.errorText}>No hay órdenes entrantes</Text>
+      </View>
+    );
+  }
+
   // Función para cambiar el estado de una orden
   const changeStatus = async (orderId: string, currentStatus: string) => {
     let newStatus = "";

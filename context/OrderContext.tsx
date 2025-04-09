@@ -48,9 +48,12 @@ export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
     };
   };
 
-  useEffect(() => {
+useEffect(() => {
     setLoading(true);
-    const q = query(ordersCollection, where("status", "==", "Ordered"));
+    const q = query(
+        ordersCollection,
+        where("status", "in", ["Ordered", "Preparing"])
+    );
 
     const unsubscribe = onSnapshot(
       q,
