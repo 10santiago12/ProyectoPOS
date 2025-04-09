@@ -20,7 +20,6 @@ export default function ChefScreen() {
     );
   }
 
-  // Función para cambiar el estado de una orden
   const changeStatus = async (orderId: string, currentStatus: string) => {
     let newStatus = "";
     // Definir el nuevo estado según el estado actual
