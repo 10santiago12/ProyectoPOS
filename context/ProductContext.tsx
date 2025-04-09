@@ -8,7 +8,7 @@ import app from "../utils/FirebaseConfig";
 interface ProductsContextType {
   products: Product[];
   addProduct: (product: Omit<Product, 'id'>, photoUri?: string | null) => Promise<void>;
-  deleteProduct: (id: string) => Promise<void>; // Nueva función
+  deleteProduct: (id: string) => Promise<void>;
   pickImage: () => Promise<string | undefined>;
   takePhoto: () => Promise<string | undefined>;
 }
@@ -55,11 +55,18 @@ export const ProductsProvider = ({ children }: { children: React.ReactNode }) =>
         photo: photoURL,
         createdAt: new Date(),
       });
-  
-      return Promise.resolve();
     } catch (error: any) {
       console.error("Error adding product: ", error.message);
-      return Promise.reject(error);
+      throw error;
+    }
+  };
+
+  const deleteProduct = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "products", id));
+    } catch (error: any) {
+      console.error("Error deleting product: ", error.message);
+      throw error;
     }
   };
 
@@ -96,15 +103,6 @@ export const ProductsProvider = ({ children }: { children: React.ReactNode }) =>
     } catch (error) {
       console.error("Error taking photo: ", error);
       return undefined;
-    }
-  };
-  const deleteProduct = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, "products", id));
-      return Promise.resolve();
-    } catch (error: any) {
-      console.error("Error deleting product: ", error.message);
-      return Promise.reject(error);
     }
   };
 

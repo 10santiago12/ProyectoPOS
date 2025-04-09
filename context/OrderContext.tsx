@@ -22,12 +22,12 @@ const OrderContext = createContext<OrderContextType>({} as OrderContextType);
 export const useOrders = () => useContext(OrderContext);
 
 export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
-  const [cart, setCart] = useState<OrderItem[]>([]);
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
-  const db = getFirestore(app);
-  const ordersCollection = collection(db, "orders");
+const { user } = useAuth();
+const [cart, setCart] = useState<OrderItem[]>([]);
+const [orders, setOrders] = useState<Order[]>([]);
+const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
+const db = getFirestore(app);
+const ordersCollection = collection(db, "orders");
 
   // Helper para encontrar un item en el carrito
 const findCartItem = (productId: string) => 

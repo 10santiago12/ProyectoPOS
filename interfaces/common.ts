@@ -13,7 +13,10 @@ export interface Product {
     price: string;
     photo?: string;
     createdAt?: Date;
-    createdBy?: string;
+}
+
+export interface CartItem extends Product {
+    quantity: number;
 }
 
 export type ProductType = "starter" | "fastfood" | "drink" | "dessert";

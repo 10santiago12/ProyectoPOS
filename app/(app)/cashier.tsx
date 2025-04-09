@@ -5,6 +5,7 @@ import { router } from "expo-router";
 import {View,Text,TextInput,TouchableOpacity,StyleSheet,ScrollView,FlatList,Image,Alert,ActivityIndicator,Platform} from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { ProductType } from "@/interfaces/common";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CashierScreen() {
   const [title, setTitle] = useState("");
@@ -45,31 +46,26 @@ export default function CashierScreen() {
   };
 
   const handleDeleteProduct = async (id: string) => {
-    Alert.alert(
-      "Confirmar eliminación",
-      "¿Estás seguro de que quieres eliminar este producto?",
-      [
-        {
-          text: "Cancelar",
-          style: "cancel"
-        },
-        { 
-          text: "Eliminar", 
-          onPress: async () => {
-            setIsLoading(true);
-            try {
-              await deleteProduct(id);
-              Alert.alert("Éxito", "Producto eliminado correctamente");
-            } catch (error) {
-              Alert.alert("Error", "No se pudo eliminar el producto");
-              console.error(error);
-            } finally {
-              setIsLoading(false);
-            }
-          }
-        }
-      ]
-    );
+    setIsLoading(true);
+    try {
+      await deleteProduct(id);
+      Alert.alert("Éxito", "Producto eliminado correctamente");
+    } catch (error) {
+      Alert.alert("Error", "No se pudo eliminar el producto");
+      console.error("Error al eliminar:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace("/auth");
+    } catch (error) {
+      Alert.alert("Error", "No se pudo cerrar la sesión");
+      console.error("Error al cerrar sesión:", error);
+    }
   };
 
   const handleTakePhoto = async () => {
@@ -107,7 +103,8 @@ export default function CashierScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>🧾 Agregar Producto</Text>
 
       <View style={styles.photoSection}>
@@ -216,16 +213,7 @@ export default function CashierScreen() {
             </View>
             <View style={styles.buttonsContainer}>
               <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => {
-                  // TODO: Implementar edición
-                }}
-                disabled={isLoading}
-              >
-                <Text style={styles.editButtonText}>✏️ Editar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.deleteButton}
+                style={[styles.deleteButton, isLoading && styles.disabledButton]}
                 onPress={() => handleDeleteProduct(item.id!)}
                 disabled={isLoading}
               >
@@ -237,27 +225,28 @@ export default function CashierScreen() {
         contentContainerStyle={{ paddingBottom: 30 }}
       />
 
-      <View style={styles.logoutContainer}>
         <TouchableOpacity 
-          onPress={async () => {
-            await logout();
-            router.replace("/auth");
-          }} 
-          style={styles.logoutButton}
+          style={styles.logoutButton} 
+          onPress={handleLogout}
           disabled={isLoading}
         >
-          <Text style={styles.logoutText}>🔓 Cerrar sesión</Text>
+          <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
   container: {
-    padding: 28,
-    backgroundColor: "#f8fafc",
     flexGrow: 1,
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 16,
+    paddingBottom: 20,
   },
   pickerContainer: {
     backgroundColor: "#ffffff",
@@ -383,22 +372,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 40,
   },
-  logoutButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: "#e2e8f0",
-    borderRadius: 8,
-  },
-  logoutButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-  logoutText: {
-    color: "#334155",
-    fontWeight: "600",
-    fontSize: 14,
-  },
   imagePreview: {
     width: '100%',
     alignItems: 'center',
@@ -435,5 +408,23 @@ const styles = StyleSheet.create({
     color: "#b91c1c",
     fontWeight: "600",
     fontSize: 13,
+  },
+  logoutButton: {
+    backgroundColor: '#ef4444',
+    padding: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 30,
+    shadowColor: '#ef4444',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  logoutButtonText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });
