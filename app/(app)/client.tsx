@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, FlatList, Image, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, FlatList, Image, SafeAreaView, ActivityIndicator, Alert, Modal } from 'react-native';
 import { Product, ProductType } from '@/interfaces/common';
 import { useAuth } from '@/context/AuthContext';
 import { useProducts } from '@/context/ProductContext';
 import { useOrders } from '@/context/OrderContext';
 
 export default function CustomerScreen() {
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const { products, loading: productsLoading, error: productsError } = useProducts();
   const { 
     cart: orderCart, 
@@ -16,11 +16,13 @@ export default function CustomerScreen() {
     clearCart, 
     getCartTotal,
     updateQuantity, 
+    orders,
     loading: ordersLoading, 
     error: ordersError 
   } = useOrders();
   
   const [selectedCategory, setSelectedCategory] = useState<ProductType | 'Todos'>('Todos');
+  const [showOrders, setShowOrders] = useState(false);
 
   const categories: (ProductType | 'Todos')[] = ['Todos', 'starter', 'fastfood', 'drink', 'dessert'];
   const categoryLabels = {
@@ -34,6 +36,18 @@ export default function CustomerScreen() {
   const filteredProducts = selectedCategory === 'Todos' 
     ? products 
     : products.filter(product => product.type === selectedCategory);
+
+  const userOrders = orders.filter(order => order.userId === user?.uid);
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   const handleAddToCart = (product: Product) => {
     const orderItem = {
@@ -70,7 +84,7 @@ export default function CustomerScreen() {
       
       Alert.alert(
         '¡Orden creada!', 
-        `Tu orden ha sido recibida con éxito`,
+        `Tu orden #${orderId.substring(0, 6)} ha sido recibida con éxito`,
         [
           { 
             text: 'Aceptar',
@@ -222,12 +236,93 @@ export default function CustomerScreen() {
           </View>
         )}
 
-        <TouchableOpacity 
-          style={styles.logoutButton} 
-          onPress={handleLogout}
+        <View style={styles.bottomButtonsContainer}>
+          <TouchableOpacity 
+            style={[styles.bottomButton, styles.ordersButton]} 
+            onPress={() => setShowOrders(true)}
+          >
+            <Text style={styles.bottomButtonText}>Mis Órdenes</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={[styles.bottomButton, styles.logoutButton]} 
+            onPress={handleLogout}
+          >
+            <Text style={styles.bottomButtonText}>Cerrar Sesión</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Modal
+          visible={showOrders}
+          animationType="slide"
+          transparent={false}
+          onRequestClose={() => setShowOrders(false)}
         >
-          <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
-        </TouchableOpacity>
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Mis Órdenes</Text>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={() => setShowOrders(false)}
+              >
+                <Text style={styles.closeButtonText}>X</Text>
+              </TouchableOpacity>
+            </View>
+
+            {ordersLoading ? (
+              <ActivityIndicator size="large" color="#3b82f6" />
+            ) : ordersError ? (
+              <Text style={styles.errorText}>{ordersError}</Text>
+            ) : userOrders.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No tienes órdenes aún</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={userOrders.sort((a, b) => 
+                  (b.createdAt instanceof Date ? b.createdAt.getTime() : 0) - 
+                  (a.createdAt instanceof Date ? a.createdAt.getTime() : 0)
+                )}
+                keyExtractor={item => item.id ?? 'unknown-id'}
+                renderItem={({ item }) => (
+                  <View style={styles.orderCard}>
+                    <View style={styles.orderHeader}>
+                      <Text style={styles.orderId}>Orden #{(item.id ?? '').substring(0, 6)}</Text>
+                      <Text style={[
+                        styles.orderStatus,
+                        item.status === 'Preparing' && styles.statusPreparing,
+                        item.status === 'Ordered' && styles.statusOrdered,
+                        item.status === 'Delivered' && styles.statusCompleted,
+                        item.status === 'Cancelled' && styles.statusCancelled,
+                      ]}>
+                        {item.status === 'Ordered' ? 'En espera' : 
+                         item.status === 'Preparing' ? 'En preparación' : 
+                         item.status === 'Delivered' ? 'Completada' : 'Completada'}
+                      </Text>
+                    </View>
+                    
+                    <Text style={styles.orderDate}>{item.createdAt ? formatDate(item.createdAt as Date) : 'Fecha no disponible'}</Text>
+                    <Text style={styles.orderTotal}>Total: ${item.total.toLocaleString()}</Text>
+                    
+                    <View style={styles.orderItemsContainer}>
+                      {item.items.map((orderItem, index) => (
+                        <View key={index} style={styles.orderItem}>
+                          <Text style={styles.orderItemName}>
+                            {orderItem.quantity}x {orderItem.title}
+                          </Text>
+                          <Text style={styles.orderItemPrice}>
+                            ${(orderItem.price * orderItem.quantity).toLocaleString()}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                )}
+                contentContainerStyle={styles.ordersListContainer}
+              />
+            )}
+          </SafeAreaView>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -471,21 +566,144 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-  logoutButton: {
-    backgroundColor: '#ef4444',
-    padding: 16,
+  bottomButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
+  bottomButton: {
+    padding: 12, // Reducido de 16
     borderRadius: 14,
     alignItems: 'center',
-    marginTop: 10,
+    marginHorizontal: 5,
+    flex: 1,
+  },
+  bottomButtonText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 14, // Reducido de 16
+  },
+  ordersButton: {
+    backgroundColor: '#10b981',
+    shadowColor: '#10b981',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  logoutButton: {
+    backgroundColor: '#ef4444',
     shadowColor: '#ef4444',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
   },
-  logoutButtonText: {
-    color: '#ffffff',
+  modalContainer: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+    padding: 16,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 24,
     fontWeight: 'bold',
+    color: '#1e3a8a',
+  },
+  closeButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#e2e8f0',
+    width: 32,
+    height: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontWeight: 'bold',
+    color: '#64748b',
+  },
+  ordersListContainer: {
+    paddingBottom: 20,
+  },
+  orderCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  orderHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  orderId: {
     fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1e293b',
+  },
+  orderStatus: {
+    fontSize: 14,
+    fontWeight: '600',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  statusOrdered: {
+    backgroundColor: '#fef9c3',
+    color: '#ca8a04',
+  },
+  statusPreparing: {
+    backgroundColor: '#dbeafe',
+    color: '#1d4ed8',
+  },
+  statusCompleted: {
+    backgroundColor: '#dcfce7',
+    color: '#15803d',
+  },
+  statusCancelled: {
+    backgroundColor: '#fee2e2',
+    color: '#b91c1c',
+  },
+  orderDate: {
+    color: '#64748b',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  orderTotal: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1e3a8a',
+    marginBottom: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f1f5f9',
+    paddingTop: 12,
+  },
+  orderItemsContainer: {
+    marginTop: 8,
+  },
+  orderItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  orderItemName: {
+    color: '#475569',
+    fontSize: 14,
+  },
+  orderItemPrice: {
+    color: '#1e293b',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
