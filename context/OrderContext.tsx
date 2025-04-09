@@ -49,18 +49,17 @@ export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     useEffect(() => {
-        if (!user?.uid) return;
-        
         setLoading(true);
-        const q = query(ordersCollection, where("userId", "==", user.uid));
-        
-        const unsubscribe = onSnapshot(q, 
+        const q = query(ordersCollection, where("status", "==", "Ordered"));
+    
+        const unsubscribe = onSnapshot(
+            q,
             (snapshot) => {
                 try {
-                    const ordersData = snapshot.docs.map(doc => 
+                    const ordersData = snapshot.docs.map((doc) =>
                         parseFirestoreOrder(doc.data(), doc.id)
                     );
-                    
+    
                     setOrders(ordersData);
                     setError(null);
                 } catch (err) {
@@ -75,9 +74,9 @@ export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
                 setLoading(false);
             }
         );
-
+    
         return () => unsubscribe();
-    }, [user?.uid]);
+    }, []);
 
     const findCartItem = (productId: string) => 
         cart.find(item => item.productId === productId);
