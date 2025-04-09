@@ -2,19 +2,20 @@ import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useProducts } from "@/context/ProductContext";
 import { router } from "expo-router";
-import {View,
-  Text,TextInput,TouchableOpacity,StyleSheet,ScrollView,FlatList,Image,Alert,ActivityIndicator,
-  Platform} from "react-native";
+import {View,Text,TextInput,TouchableOpacity,StyleSheet,ScrollView,FlatList,Image,Alert,ActivityIndicator,Platform} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { ProductType } from "@/interfaces/common";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function CashierScreen() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [type, setType] = useState("");
+  const [type, setType] = useState<ProductType>("starter");
   const [price, setPrice] = useState("");
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { logout } = useAuth();
-  const { products, addProduct, pickImage, takePhoto } = useProducts();
+  const { products, addProduct, deleteProduct, pickImage, takePhoto } = useProducts();
 
   const handleSaveProduct = async () => {
     if (!title || !price) {
@@ -29,10 +30,9 @@ export default function CashierScreen() {
         photoUri || null
       );
       
-      // Limpiar formulario
       setTitle("");
       setDescription("");
-      setType("");
+      setType("starter");
       setPrice("");
       setPhotoUri(null);
       
@@ -42,6 +42,29 @@ export default function CashierScreen() {
       console.error(error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    setIsLoading(true);
+    try {
+      await deleteProduct(id);
+      Alert.alert("Éxito", "Producto eliminado correctamente");
+    } catch (error) {
+      Alert.alert("Error", "No se pudo eliminar el producto");
+      console.error("Error al eliminar:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.replace("/auth");
+    } catch (error) {
+      Alert.alert("Error", "No se pudo cerrar la sesión");
+      console.error("Error al cerrar sesión:", error);
     }
   };
 
@@ -63,7 +86,6 @@ export default function CashierScreen() {
     }
     return undefined;
   } else {
-    // Comportamiento normal para móvil
     const uri = await takePhoto();
     if (uri) setPhotoUri(uri);
     return uri;
@@ -81,7 +103,8 @@ export default function CashierScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>🧾 Agregar Producto</Text>
 
       <View style={styles.photoSection}>
@@ -134,14 +157,18 @@ export default function CashierScreen() {
         editable={!isLoading}
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Tipo de producto"
-        value={type}
-        onChangeText={setType}
-        placeholderTextColor="#94a3b8"
-        editable={!isLoading}
-      />
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={type}
+          onValueChange={(itemValue: ProductType) => setType(itemValue)}
+          mode="dropdown"
+        >
+          <Picker.Item label="Entrante" value="starter" />
+          <Picker.Item label="Comida rápida" value="fastfood" />
+          <Picker.Item label="Bebida" value="drink" />
+          <Picker.Item label="Postre" value="dessert" />
+        </Picker>
+      </View>
 
       <TextInput
         style={styles.input}
@@ -184,41 +211,50 @@ export default function CashierScreen() {
                 />
               )}
             </View>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => {
-                // TODO: Implementar edición
-              }}
-              disabled={isLoading}
-            >
-              <Text style={styles.editButtonText}>✏️ Editar</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonsContainer}>
+              <TouchableOpacity
+                style={[styles.deleteButton, isLoading && styles.disabledButton]}
+                onPress={() => handleDeleteProduct(item.id!)}
+                disabled={isLoading}
+              >
+                <Text style={styles.deleteButtonText}>🗑️ Eliminar</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
         contentContainerStyle={{ paddingBottom: 30 }}
       />
 
-      <View style={styles.logoutContainer}>
         <TouchableOpacity 
-          onPress={async () => {
-            await logout();
-            router.replace("/auth");
-          }} 
-          style={styles.logoutButton}
+          style={styles.logoutButton} 
+          onPress={handleLogout}
           disabled={isLoading}
         >
-          <Text style={styles.logoutText}>🔓 Cerrar sesión</Text>
+          <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f8fafc',
+  },
   container: {
-    padding: 28,
-    backgroundColor: "#f8fafc",
     flexGrow: 1,
+    backgroundColor: '#f8fafc',
+    paddingHorizontal: 16,
+    paddingBottom: 20,
+  },
+  pickerContainer: {
+    backgroundColor: "#ffffff",
+    borderRadius: 10,
+    padding: 8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
   },
   header: {
     fontSize: 28,
@@ -336,17 +372,6 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 40,
   },
-  logoutButton: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    backgroundColor: "#e2e8f0",
-    borderRadius: 8,
-  },
-  logoutText: {
-    color: "#334155",
-    fontWeight: "600",
-    fontSize: 14,
-  },
   imagePreview: {
     width: '100%',
     alignItems: 'center',
@@ -366,5 +391,40 @@ const styles = StyleSheet.create({
   removePhotoText: {
     color: '#b91c1c',
     fontWeight: '600',
+  },
+  buttonsContainer: {
+    flexDirection: 'column',
+    marginLeft: 12,
+  },
+  deleteButton: {
+    backgroundColor: "#fee2e2",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#fecaca",
+  },
+  deleteButtonText: {
+    color: "#b91c1c",
+    fontWeight: "600",
+    fontSize: 13,
+  },
+  logoutButton: {
+    backgroundColor: '#ef4444',
+    padding: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 30,
+    shadowColor: '#ef4444',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  logoutButtonText: {
+    color: '#ffffff',
+    fontWeight: 'bold',
+    fontSize: 16,
   },
 });

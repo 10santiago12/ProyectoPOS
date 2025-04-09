@@ -1,13 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { Product } from "@/interfaces/common"; 
-import { getFirestore, collection, addDoc, onSnapshot } from "firebase/firestore";
+import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import * as ImagePicker from 'expo-image-picker';
 import app from "../utils/FirebaseConfig";
 
 interface ProductsContextType {
   products: Product[];
+  loading: boolean;
+  error: string | null;
   addProduct: (product: Omit<Product, 'id'>, photoUri?: string | null) => Promise<void>;
+  deleteProduct: (id: string) => Promise<void>;
   pickImage: () => Promise<string | undefined>;
   takePhoto: () => Promise<string | undefined>;
 }
@@ -24,6 +27,9 @@ export const useProducts = () => {
 
 export const ProductsProvider = ({ children }: { children: React.ReactNode }) => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  
   const db = getFirestore(app);
   const storage = getStorage(app);
   const productsCollection = collection(db, "products");
@@ -43,9 +49,9 @@ export const ProductsProvider = ({ children }: { children: React.ReactNode }) =>
 
   const addProduct = async (product: Omit<Product, 'id'>, photoUri?: string | null) => {
     try {
+      setLoading(true);
       let photoURL = null;
       
-      // Subir imagen si existe
       if (photoUri) {
         photoURL = await uploadImage(photoUri);
       }
@@ -55,11 +61,27 @@ export const ProductsProvider = ({ children }: { children: React.ReactNode }) =>
         photo: photoURL,
         createdAt: new Date(),
       });
-  
-      return Promise.resolve();
+      setError(null);
     } catch (error: any) {
+      setError(`Error al agregar producto: ${error.message}`);
       console.error("Error adding product: ", error.message);
-      return Promise.reject(error);
+      throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteProduct = async (id: string) => {
+    try {
+      setLoading(true);
+      await deleteDoc(doc(db, "products", id));
+      setError(null);
+    } catch (error: any) {
+      setError(`Error al eliminar producto: ${error.message}`);
+      console.error("Error deleting product: ", error.message);
+      throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -76,6 +98,7 @@ export const ProductsProvider = ({ children }: { children: React.ReactNode }) =>
         return result.assets[0].uri;
       }
     } catch (error) {
+      setError('Error al seleccionar imagen');
       console.error("Error picking image: ", error);
       return undefined;
     }
@@ -94,24 +117,53 @@ export const ProductsProvider = ({ children }: { children: React.ReactNode }) =>
         return result.assets[0].uri;
       }
     } catch (error) {
+      setError('Error al tomar foto');
       console.error("Error taking photo: ", error);
       return undefined;
     }
   };
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(productsCollection, (snapshot) => {
-      const productsData: Product[] = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Product[];
-      setProducts(productsData);
-    });
-    return unsubscribe;
+    setLoading(true);
+    setError(null);
+    
+    const unsubscribe = onSnapshot(
+      productsCollection,
+      (snapshot) => {
+        try {
+          const productsData: Product[] = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          })) as Product[];
+          setProducts(productsData);
+          setError(null);
+        } catch (error: any) {
+          setError(`Error al procesar productos: ${error.message}`);
+          console.error("Error processing products: ", error);
+        } finally {
+          setLoading(false);
+        }
+      },
+      (firebaseError) => {
+        setError(`Error de Firebase: ${firebaseError.message}`);
+        setLoading(false);
+        console.error("Firebase error: ", firebaseError);
+      }
+    );
+
+    return () => unsubscribe();
   }, []);
 
   return (
-    <ProductContext.Provider value={{ products, addProduct, pickImage, takePhoto }}>
+    <ProductContext.Provider value={{ 
+      products, 
+      loading,
+      error,
+      addProduct, 
+      deleteProduct, 
+      pickImage, 
+      takePhoto 
+    }}>
       {children}
     </ProductContext.Provider>
   );

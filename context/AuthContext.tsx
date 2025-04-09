@@ -4,18 +4,18 @@ import { getFirestore, doc, setDoc, updateDoc, getDoc } from "firebase/firestore
 import { createContext, useContext, useState, useEffect } from "react";
 import app from "../utils/FirebaseConfig";
 import { router } from "expo-router"; 
-import { User } from "@/interfaces/common"; // Tu interfaz personalizada
+import { User } from "@/interfaces/common";
 
 interface AuthContextType {
-  user: FirebaseUser | null; // Usuario de Firebase Auth
-  userData: User | null;    // Tus datos personalizados de Firestore
+  user: FirebaseUser | null;
+  userData: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (user: User) => Promise<void>;
   updateUser: (user: Partial<User>) => Promise<void>;
   updateRole: (role: "chef" | "client" | "cashier") => Promise<void>;
   logout: () => Promise<void>;
-  refreshUserData: () => Promise<void>; // Nueva función para actualizar datos
+  refreshUserData: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -29,7 +29,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [userData, setUserData] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Cargar usuario y datos al iniciar
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
@@ -43,7 +42,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return unsubscribe;
   }, []);
 
-  // Cargar datos adicionales del usuario desde Firestore
   const loadUserData = async (uid: string) => {
     try {
       const userDocRef = doc(db, "users", uid);
@@ -61,7 +59,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Actualizar datos del usuario
   const refreshUserData = async () => {
     if (firebaseUser) {
       await loadUserData(firebaseUser.uid);
@@ -71,11 +68,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      await loadUserData(userCredential.user.uid);
-      
-      // Redirección basada en rol
-      if (userData?.role) {
-        router.replace(`/(app)/${userData.role}`);
+  
+      const userDocRef = doc(db, "users", userCredential.user.uid);
+      const userSnap = await getDoc(userDocRef);
+  
+      if (userSnap.exists()) {
+        const data = userSnap.data() as User;
+        setUserData(data);
+        router.replace(`/(app)/${data.role}`);
+      } else {
+        throw new Error("User data not found");
       }
     } catch (error: any) {
       console.error("Login error:", error.message);
@@ -90,13 +92,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         user.email,
         user.password
       );
-
-      // Actualizar perfil en Firebase Auth
+  
       await updateProfile(userCredential.user, {
         displayName: user.name,
       });
-
-      // Crear documento en Firestore
+  
       const userDocRef = doc(db, "users", userCredential.user.uid);
       await setDoc(userDocRef, {
         name: user.name,
@@ -104,28 +104,32 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         role: user.role,
         createdAt: new Date(),
       });
-
-      // Cargar datos y redirigir
-      await loadUserData(userCredential.user.uid);
-      router.replace(`/(app)/${user.role}`);
+  
+      const userSnap = await getDoc(userDocRef);
+      if (userSnap.exists()) {
+        const data = userSnap.data() as User;
+        setUserData(data);
+        router.replace(`/(app)/${data.role}`);
+      } else {
+        throw new Error("User document not found after registration");
+      }
     } catch (error: any) {
       console.error("Registration error:", error.message);
       throw error;
     }
   };
+  
 
   const updateUser = async (user: Partial<User>) => {
     if (!firebaseUser) throw new Error("No user logged in");
 
     try {
-      // Actualizar Auth si hay cambios en el nombre
       if (user.name) {
         await updateProfile(firebaseUser, {
           displayName: user.name
         });
       }
 
-      // Actualizar Firestore
       const userDocRef = doc(db, "users", firebaseUser.uid);
       await updateDoc(userDocRef, {
         ...user,
