@@ -47,38 +47,39 @@ export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
         };
     };
 
-    useEffect(() => {
-        if (!user?.uid) return;
-        
-        setLoading(true);
-        // Consulta para todas las órdenes del usuario (clientes)
-        const q = query(ordersCollection, where("userId", "==", user.uid));
-        
-        const unsubscribe = onSnapshot(q, 
-            (snapshot) => {
-                try {
-                    const ordersData = snapshot.docs.map(doc => 
-                        parseFirestoreOrder(doc.data(), doc.id)
-                    );
-                    
-                    setOrders(ordersData);
-                    // Filtramos solo las órdenes en estado "Ordered" para el chef
-                    setChefOrders(ordersData.filter(order => order.status === "Ordered"));
-                    setError(null);
-                } catch (err) {
-                    setError(`Error al procesar órdenes: ${err instanceof Error ? err.message : String(err)}`);
-                } finally {
-                    setLoading(false);
-                }
-            },
-            (err) => {
-                setError(`Error en la conexión: ${err.message}`);
+    // Dentro de tu OrdersProvider (context)
+useEffect(() => {
+    if (!user?.uid) return;
+    
+    setLoading(true);
+    // Query específica para órdenes del chef
+    const qChef = query(
+        ordersCollection,
+        where("status", "==", "Ordered") // Filtro en servidor
+    );
+    
+    const unsubscribeChef = onSnapshot(qChef, 
+        (snapshot) => {
+            try {
+                const chefOrdersData = snapshot.docs.map(doc => 
+                    parseFirestoreOrder(doc.data(), doc.id)
+                );
+                setChefOrders(chefOrdersData); // Actualiza solo órdenes del chef
+                setError(null);
+            } catch (err) {
+                setError(`Error al procesar órdenes: ${err instanceof Error ? err.message : String(err)}`);
+            } finally {
                 setLoading(false);
             }
-        );
+        },
+        (err) => {
+            setError(`Error en la conexión: ${err.message}`);
+            setLoading(false);
+        }
+    );
 
-        return () => unsubscribe();
-    }, [user?.uid]);
+    return () => unsubscribeChef();
+}, [user?.uid]);
 
     // Función para actualizar el estado de una orden (ej: "Ordered" → "Preparing")
     const updateOrderStatus = async (orderId: string, newStatus: Order["status"]) => {
@@ -88,7 +89,6 @@ export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
                 status: newStatus,
                 updatedAt: serverTimestamp(),
             });
-            // Actualizamos el estado local
             setChefOrders(prev => 
                 prev.map(order => 
                     order.id === orderId ? { ...order, status: newStatus } : order
