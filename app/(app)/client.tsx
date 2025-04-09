@@ -1,46 +1,25 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, FlatList, Image, SafeAreaView } from 'react-native';
-import { Product, CartItem, ProductType } from '@/interfaces/common';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, FlatList, Image, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
+import { Product, ProductType } from '@/interfaces/common';
 import { useAuth } from '@/context/AuthContext';
+import { useProducts } from '@/context/ProductContext';
+import { useOrders } from '@/context/OrderContext';
 
 export default function CustomerScreen() {
   const { logout } = useAuth();
-  const [products, setProducts] = useState<Product[]>([
-    {
-      id: '1',
-      title: 'Hamburguesa Clásica',
-      description: 'Carne de res, queso cheddar, lechuga fresca y tomate',
-      price: '25000',
-      type: 'fastfood',
-      photo: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80'
-    },
-    {
-      id: '2',
-      title: 'Jugo Natural',
-      description: 'Jugo de naranja recién exprimido, sin conservantes',
-      price: '8000',
-      type: 'drink',
-      photo: 'https://images.unsplash.com/photo-1603569283847-aa295f0d016a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80'
-    },
-    {
-      id: '3',
-      title: 'Ensalada César',
-      description: 'Lechuga romana, croutones, parmesano y aderezo clásico',
-      price: '18000',
-      type: 'fastfood',
-      photo: 'https://images.unsplash.com/photo-1546793665-c74683f339c1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80'
-    },
-    {
-      id: '4',
-      title: 'Tiramisú',
-      description: 'Postre italiano con capas de bizcocho, café y crema de mascarpone',
-      price: '12000',
-      type: 'dessert',
-      photo: 'https://images.unsplash.com/photo-1563805042-7684c019e1cb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1200&q=80'
-    }
-  ]);
-
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const { products, loading: productsLoading, error: productsError } = useProducts();
+  const { 
+    cart: orderCart, 
+    addToCart: addToOrderCart,
+    removeFromCart,
+    createOrder, 
+    clearCart, 
+    getCartTotal,
+    updateQuantity, 
+    loading: ordersLoading, 
+    error: ordersError 
+  } = useOrders();
+  
   const [selectedCategory, setSelectedCategory] = useState<ProductType | 'Todos'>('Todos');
 
   const categories: (ProductType | 'Todos')[] = ['Todos', 'starter', 'fastfood', 'drink', 'dessert'];
@@ -56,41 +35,57 @@ export default function CustomerScreen() {
     ? products 
     : products.filter(product => product.type === selectedCategory);
 
-  const addToCart = (product: Product) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === product.id);
-      if (existingItem) {
-        return prevCart.map(item =>
-          item.id === product.id 
-            ? { ...item, quantity: item.quantity + 1 } 
-            : item
-        );
-      }
-      return [...prevCart, { ...product, quantity: 1 }];
-    });
+  const handleAddToCart = (product: Product) => {
+    const orderItem = {
+      productId: product.id!,
+      title: product.title,
+      price: parseInt(product.price),
+      quantity: 1
+    };
+    addToOrderCart(orderItem);
   };
 
-  const removeFromCart = (productId: string) => {
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item.id === productId);
-      if (existingItem && existingItem.quantity > 1) {
-        return prevCart.map(item =>
-          item.id === productId 
-            ? { ...item, quantity: item.quantity - 1 } 
-            : item
-        );
-      }
-      return prevCart.filter(item => item.id !== productId);
-    });
-  };
-
-  const getTotal = () => {
-    return cart.reduce((total, item) => total + (parseInt(item.price) * item.quantity), 0);
+  const handleRemoveFromCart = (productId: string) => {
+    const currentQuantity = getQuantity(productId);
+    if (currentQuantity > 1) {
+      updateQuantity(productId, currentQuantity - 1);
+    } else {
+      removeFromCart(productId);
+    }
   };
 
   const getQuantity = (productId: string) => {
-    const item = cart.find(item => item.id === productId);
+    const item = orderCart.find(item => item.productId === productId);
     return item ? item.quantity : 0;
+  };
+
+  const handleSubmitOrder = async () => {
+    try {
+      if (orderCart.length === 0) {
+        Alert.alert('Carrito vacío', 'Agrega productos al carrito antes de ordenar');
+        return;
+      }
+
+      const orderId = await createOrder();
+      
+      Alert.alert(
+        '¡Orden creada!', 
+        `Tu orden ha sido recibida con éxito`,
+        [
+          { 
+            text: 'Aceptar',
+            onPress: () => clearCart()
+          }
+        ]
+      );
+      
+    } catch (error) {
+      console.error('Error al crear orden:', error);
+      Alert.alert(
+        'Error', 
+        'No se pudo crear la orden. Por favor intenta nuevamente'
+      );
+    }
   };
 
   const handleLogout = async () => {
@@ -132,84 +127,101 @@ export default function CustomerScreen() {
           </ScrollView>
         </View>
 
-        <FlatList
-          data={filteredProducts}
-          keyExtractor={item => item.id!}
-          renderItem={({ item }) => (
-            <View style={styles.productCard}>
-              {item.photo && (
-                <Image 
-                  source={{ uri: item.photo }} 
-                  style={styles.productImage} 
-                  resizeMode="cover"
-                />
-              )}
-              <View style={styles.productInfo}>
-                <Text style={styles.productTitle}>{item.title}</Text>
-                <Text style={styles.productDescription}>{item.description}</Text>
-                <Text style={styles.productPrice}>${parseInt(item.price).toLocaleString()}</Text>
+        {productsLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#3b82f6" />
+          </View>
+        ) : productsError ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{productsError}</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={filteredProducts}
+            keyExtractor={item => item.id!}
+            renderItem={({ item }) => (
+              <View style={styles.productCard}>
+                {item.photo && (
+                  <Image 
+                    source={{ uri: item.photo }} 
+                    style={styles.productImage} 
+                    resizeMode="cover"
+                  />
+                )}
+                <View style={styles.productInfo}>
+                  <Text style={styles.productTitle}>{item.title}</Text>
+                  <Text style={styles.productDescription}>{item.description}</Text>
+                  <Text style={styles.productPrice}>${parseInt(item.price).toLocaleString()}</Text>
 
-                <View style={styles.quantityControls}>
-                  <TouchableOpacity 
-                    style={[
-                      styles.quantityButton,
-                      getQuantity(item.id!) === 0 && styles.disabledButton
-                    ]} 
-                    onPress={() => removeFromCart(item.id!)}
-                    disabled={getQuantity(item.id!) === 0}
-                  >
-                    <Text style={styles.quantityText}>-</Text>
-                  </TouchableOpacity>
-                  <Text style={styles.quantityNumber}>{getQuantity(item.id!)}</Text>
-                  <TouchableOpacity 
-                    style={styles.quantityButton} 
-                    onPress={() => addToCart(item)}
-                  >
-                    <Text style={styles.quantityText}>+</Text>
-                  </TouchableOpacity>
+                  <View style={styles.quantityControls}>
+                    <TouchableOpacity 
+                      style={[
+                        styles.quantityButton,
+                        getQuantity(item.id!) === 0 && styles.disabledButton
+                      ]} 
+                      onPress={() => handleRemoveFromCart(item.id!)}
+                      disabled={getQuantity(item.id!) === 0}
+                    >
+                      <Text style={styles.quantityText}>-</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.quantityNumber}>{getQuantity(item.id!)}</Text>
+                    <TouchableOpacity 
+                      style={styles.quantityButton} 
+                      onPress={() => handleAddToCart(item)}
+                    >
+                      <Text style={styles.quantityText}>+</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
-            </View>
-          )}
-          contentContainerStyle={styles.productsContainer}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No hay productos en esta categoría</Text>
-            </View>
-          }
-        />
+            )}
+            contentContainerStyle={styles.productsContainer}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No hay productos en esta categoría</Text>
+              </View>
+            }
+          />
+        )}
 
-        {cart.length > 0 && (
+        {orderCart.length > 0 && (
           <View style={styles.cartContainer}>
             <View style={styles.cartHeader}>
               <Text style={styles.cartTitle}>🛒 Tu Pedido</Text>
-              <Text style={styles.cartTotal}>Total: ${getTotal().toLocaleString()}</Text>
+              <Text style={styles.cartTotal}>Total: ${getCartTotal().toLocaleString()}</Text>
             </View>
 
             <ScrollView 
               style={styles.cartItemsContainer}
               showsVerticalScrollIndicator={false}
             >
-              {cart.map(item => (
-                <View key={item.id} style={styles.cartItem}>
+              {orderCart.map(item => (
+                <View key={item.productId} style={styles.cartItem}>
                   <View style={styles.cartItemLeft}>
                     <Text style={styles.cartItemName}>
                       {item.title} <Text style={styles.cartItemQuantity}>x{item.quantity}</Text>
                     </Text>
-                    <Text style={styles.cartItemDescription}>{item.description}</Text>
+                    <Text style={styles.cartItemPrice}>${item.price.toLocaleString()} c/u</Text>
                   </View>
-                  <Text style={styles.cartItemPrice}>${(parseInt(item.price) * item.quantity).toLocaleString()}</Text>
+                  <Text style={styles.cartItemPrice}>${(item.price * item.quantity).toLocaleString()}</Text>
                 </View>
               ))}
             </ScrollView>
 
-            <TouchableOpacity style={styles.orderButton} onPress={() => alert('Pedido realizado!')}>
-              <Text style={styles.orderButtonText}>Realizar Pedido</Text>
+            <TouchableOpacity 
+              style={styles.orderButton} 
+              onPress={handleSubmitOrder}
+              disabled={ordersLoading}
+            >
+              {ordersLoading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.orderButtonText}>Realizar Pedido</Text>
+              )}
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Botón de cerrar sesión */}
         <TouchableOpacity 
           style={styles.logoutButton} 
           onPress={handleLogout}
@@ -270,6 +282,22 @@ const styles = StyleSheet.create({
   },
   selectedCategoryText: {
     color: '#ffffff',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#ef4444',
+    textAlign: 'center',
   },
   productsContainer: {
     paddingBottom: 180,
@@ -422,11 +450,6 @@ const styles = StyleSheet.create({
     color: '#64748b',
     fontWeight: 'normal',
   },
-  cartItemDescription: {
-    color: '#94a3b8',
-    fontSize: 12,
-    marginTop: 2,
-  },
   cartItemPrice: {
     fontWeight: '700',
     color: '#1e293b',
@@ -448,7 +471,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-  // Estilos para el botón de cerrar sesión
   logoutButton: {
     backgroundColor: '#ef4444',
     padding: 16,

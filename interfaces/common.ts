@@ -1,3 +1,5 @@
+import { FieldValue } from "firebase/firestore";
+
 export interface User {
 name:string, 
 email:string, 
@@ -34,6 +36,6 @@ export interface Order {
     items: OrderItem[];
     total: number;
     status: "Ordered" | "Preparing" | "Ready" | "Delivered" | "Cancelled";
-    createdAt?: Date;
-    updatedAt?: Date;
+    createdAt?: Date | FieldValue;
+    updatedAt?: Date | FieldValue;
 }
