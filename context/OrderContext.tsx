@@ -1,10 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, where,DocumentData} from "firebase/firestore";
+import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, where, updateDoc, doc, DocumentData } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
 import app from "../utils/FirebaseConfig";
 import { Order, OrderItem } from "@/interfaces/common";
-import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
-import { getAuth } from "firebase/auth";
 
 interface OrderContextType {
     cart: OrderItem[];
@@ -13,8 +11,9 @@ interface OrderContextType {
     updateQuantity: (productId: string, newQuantity: number) => void;
     clearCart: () => void;
     createOrder: (notes?: string) => Promise<string>;
-    currentOrder: Order | null;
     orders: Order[];
+    chefOrders: Order[]; // Órdenes filtradas para el chef (status = "Ordered")
+    updateOrderStatus: (orderId: string, newStatus: Order["status"]) => Promise<void>;
     getCartTotal: () => number;
     getItemCount: () => number;
     loading: boolean;
@@ -29,7 +28,7 @@ export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
     const { user } = useAuth();
     const [cart, setCart] = useState<OrderItem[]>([]);
     const [orders, setOrders] = useState<Order[]>([]);
-    const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
+    const [chefOrders, setChefOrders] = useState<Order[]>([]); // Nuevo estado para órdenes del chef
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     
@@ -43,8 +42,8 @@ export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
             items: docData.items,
             total: docData.total,
             status: docData.status,
-            createdAt: docData.createdAt?.toDate?.() || new Date(),
-            updatedAt: docData.updatedAt?.toDate?.() || new Date(),
+            createdAt: docData.createdAt?.toDate() || new Date(),
+            updatedAt: docData.updatedAt?.toDate() || new Date(),
         };
     };
 
@@ -52,6 +51,7 @@ export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
         if (!user?.uid) return;
         
         setLoading(true);
+        // Consulta para todas las órdenes del usuario (clientes)
         const q = query(ordersCollection, where("userId", "==", user.uid));
         
         const unsubscribe = onSnapshot(q, 
@@ -62,10 +62,11 @@ export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
                     );
                     
                     setOrders(ordersData);
+                    // Filtramos solo las órdenes en estado "Ordered" para el chef
+                    setChefOrders(ordersData.filter(order => order.status === "Ordered"));
                     setError(null);
                 } catch (err) {
-                    const error = err instanceof Error ? err : new Error(String(err));
-                    setError(`Error al procesar órdenes: ${error.message}`);
+                    setError(`Error al procesar órdenes: ${err instanceof Error ? err.message : String(err)}`);
                 } finally {
                     setLoading(false);
                 }
@@ -79,12 +80,32 @@ export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
         return () => unsubscribe();
     }, [user?.uid]);
 
-    const findCartItem = (productId: string) => 
-        cart.find(item => item.productId === productId);
+    // Función para actualizar el estado de una orden (ej: "Ordered" → "Preparing")
+    const updateOrderStatus = async (orderId: string, newStatus: Order["status"]) => {
+        setLoading(true);
+        try {
+            await updateDoc(doc(ordersCollection, orderId), {
+                status: newStatus,
+                updatedAt: serverTimestamp(),
+            });
+            // Actualizamos el estado local
+            setChefOrders(prev => 
+                prev.map(order => 
+                    order.id === orderId ? { ...order, status: newStatus } : order
+                )
+            );
+        } catch (err) {
+            setError(`Error al actualizar orden: ${err instanceof Error ? err.message : String(err)}`);
+            throw err;
+        } finally {
+            setLoading(false);
+        }
+    };
 
+    // Funciones del carrito (sin cambios)
     const addToCart = (product: OrderItem) => {
         setCart(prev => {
-            const existing = findCartItem(product.productId);
+            const existing = prev.find(item => item.productId === product.productId);
             return existing
                 ? prev.map(item => 
                     item.productId === product.productId
@@ -100,8 +121,8 @@ export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     const updateQuantity = (productId: string, newQuantity: number) => {
-        setCart(prevCart => 
-            prevCart.map(item => 
+        setCart(prev => 
+            prev.map(item => 
                 item.productId === productId 
                     ? { ...item, quantity: newQuantity } 
                     : item
@@ -118,48 +139,27 @@ export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
         cart.reduce((count, item) => count + item.quantity, 0);
 
     const createOrder = async (notes?: string) => {
-        const currentUser=getAuth().currentUser
-        if (!currentUser) throw new Error("Usuario no autenticado");
+        if (!user?.uid) throw new Error("Usuario no autenticado");
         if (cart.length === 0) throw new Error("El carrito está vacío");
 
         setLoading(true);
-        setError(null);
-
         try {
             const orderData = {
-                userId: currentUser.uid,
-                items: cart.map(item => ({
-                    productId: item.productId,
-                    title: item.title,
-                    price: item.price,
-                    quantity: item.quantity
-                })),
+                userId: user.uid,
+                items: cart,
                 total: getCartTotal(),
                 status: "Ordered" as const,
                 createdAt: serverTimestamp(),
                 updatedAt: serverTimestamp(),
-                ...(notes && { notes })
+                ...(notes && { notes }),
             };
 
             const docRef = await addDoc(ordersCollection, orderData);
-            
-            const newOrder: Order = {
-                ...orderData,
-                id: docRef.id,
-                createdAt: new Date(),
-                updatedAt: new Date()
-            };
-            
-            setCurrentOrder(newOrder);
-            setOrders(prev => [...prev, newOrder]);
             clearCart();
-            console.log("Orden creada con éxito!! el ID es: ", docRef.id);
-            
             return docRef.id;
         } catch (err) {
-            const error = err instanceof Error ? err : new Error(String(err));
-            setError(`Error al crear orden: ${error.message}`);
-            throw error;
+            setError(`Error al crear orden: ${err instanceof Error ? err.message : String(err)}`);
+            throw err;
         } finally {
             setLoading(false);
         }
@@ -168,7 +168,20 @@ export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
     return (
         <OrderContext.Provider
             value={{
-                cart,addToCart,removeFromCart,updateQuantity,clearCart,createOrder,currentOrder,orders,getCartTotal,getItemCount,loading,error}}
+                cart,
+                addToCart,
+                removeFromCart,
+                updateQuantity,
+                clearCart,
+                createOrder,
+                orders,
+                chefOrders, // Órdenes filtradas para el chef
+                updateOrderStatus, // Nueva función
+                getCartTotal,
+                getItemCount,
+                loading,
+                error,
+            }}
         >
             {children}
         </OrderContext.Provider>
