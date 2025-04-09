@@ -1,86 +1,75 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from "react-native";
-
-interface OrderItem {
-  id: string;
-  title: string;
-  quantity: number;
-}
-
-interface Order {
-  id: string;
-  items: OrderItem[];
-  status: string;
-  timestamp: string;
-}
+import { useOrders } from "@/context/OrderContext"; // Importar el contexto para obtener las órdenes desde Firebase
 
 export default function ChefScreen() {
-  const [orders, setOrders] = useState<Order[]>([
-    {
-      id: "1",
-      items: [
-        { id: "1", title: "Hamburguesa Clásica", quantity: 2 },
-        { id: "2", title: "Papas fritas", quantity: 1 },
-      ],
-      status: "New",
-      timestamp: new Date().toLocaleString(),
-    },
-    {
-      id: "2",
-      items: [
-        { id: "3", title: "Jugo Natural", quantity: 3 },
-        { id: "4", title: "Tostadas", quantity: 2 },
-      ],
-      status: "New",
-      timestamp: new Date().toLocaleString(),
-    },
-  ]);
+  const { orders, loading, error, updateOrderStatus } = useOrders(); // Obtener las órdenes y la función para actualizar el estado
+  const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
 
-  const changeStatus = (orderId: string, newStatus: string) => {
-    const updatedOrders = orders.map((order) => {
-      if (order.id === orderId) {
-        return { ...order, status: newStatus, timestamp: new Date().toLocaleString() };
+  // Filtrar las órdenes para mostrar las que tienen el estado 'Ordered' o 'Preparing'
+  const filteredOrders = orders.filter(
+    (order) => order.status === "Ordered" || order.status === "Preparing"
+  );
+
+  // Función para cambiar el estado de una orden
+  const changeStatus = async (orderId: string, currentStatus: string) => {
+    let newStatus = "";
+    // Definir el nuevo estado según el estado actual
+    if (currentStatus === "Ordered") {
+      newStatus = "Preparing";
+    } else if (currentStatus === "Preparing") {
+      newStatus = "Ready";
+    } else if (currentStatus === "Ready") {
+      newStatus = "Completed"; // O cualquier otro estado final que desees
+    }
+
+    try {
+      await updateOrderStatus(orderId, newStatus); // Llamar a la función del contexto para actualizar el estado en Firebase
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error(`Error al cambiar el estado de la orden ${orderId}: ${err.message}`);
+      } else {
+        console.error(`Error al cambiar el estado de la orden ${orderId}: ${err}`);
       }
-      return order;
-    });
-    setOrders(updatedOrders);
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Chef's Orders</Text>
 
+      {/* Filtros por categoría (si fuera necesario) */}
       <FlatList
-        data={orders}
-        keyExtractor={(item) => item.id}
+        data={filteredOrders}
+        keyExtractor={(item) => (item.id || item.createdAt?.toString()) ?? "no-id"} // Asegurarse de que 'id' esté siempre definido
         renderItem={({ item }) => (
           <View style={styles.orderCard}>
-            <Text style={styles.orderTimestamp}>Order Time: {item.timestamp}</Text>
+            <Text style={styles.orderTimestamp}>Order Time: {item.createdAt?.toLocaleString()}</Text>
             <Text style={styles.orderStatus}>Status: {item.status}</Text>
             <Text style={styles.orderTitle}>Items:</Text>
             {item.items.map((orderItem) => (
-              <Text key={orderItem.id} style={styles.orderItem}>
+              <Text key={orderItem.productId} style={styles.orderItem}>
                 {orderItem.quantity}x {orderItem.title}
               </Text>
             ))}
             <View style={styles.statusButtons}>
-              {item.status === "New" && (
+              {item.status === "Ordered" && (
                 <TouchableOpacity
                   style={styles.button}
-                  onPress={() => changeStatus(item.id, "Cooking")}
+                  onPress={() => changeStatus(item.id!, "Ordered")}
                 >
                   <Text style={styles.buttonText}>Start Cooking</Text>
                 </TouchableOpacity>
               )}
-              {item.status === "Cooking" && (
+              {item.status === "Preparing" && (
                 <TouchableOpacity
                   style={styles.button}
-                  onPress={() => changeStatus(item.id, "Done")}
+                  onPress={() => changeStatus(item.id!, "Preparing")}
                 >
-                  <Text style={styles.buttonText}>Mark as Done</Text>
+                  <Text style={styles.buttonText}>Mark as Ready</Text>
                 </TouchableOpacity>
               )}
-              {item.status === "Done" && (
+              {item.status === "Ready" && (
                 <Text style={styles.doneText}>Ready for Pickup</Text>
               )}
             </View>
@@ -88,6 +77,10 @@ export default function ChefScreen() {
         )}
         contentContainerStyle={styles.ordersList}
       />
+
+      {/* Mensajes de error o carga */}
+      {loading && <Text>Loading orders...</Text>}
+      {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 }
@@ -158,6 +151,10 @@ const styles = StyleSheet.create({
   doneText: {
     color: "#10b981",
     fontSize: 16,
+    fontWeight: "bold",
+  },
+  errorText: {
+    color: "red",
     fontWeight: "bold",
   },
 });
