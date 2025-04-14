@@ -8,16 +8,14 @@ export default function ChefScreen() {
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
-  // Actualizar el tiempo actual cada segundo
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 1000); // Actualizar cada segundo
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
 
-  // Función para calcular tiempo transcurrido con minutos y segundos
   const getTimePassed = (orderTime: Date | FieldValue | undefined): string => {
     if (!orderTime) return "N/A";
 
@@ -41,7 +39,6 @@ export default function ChefScreen() {
     return `${remainingSeconds}s`;
   };
 
-  // Filtrar las órdenes para mostrar las que tienen el estado 'Ordered' o 'Preparing'
   const filteredOrders = orders.filter(
     (order) => order.status === "Ordered" || order.status === "Preparing"
   );
