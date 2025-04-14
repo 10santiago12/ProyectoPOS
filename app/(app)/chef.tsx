@@ -1,12 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from "react-native";
-import { useOrders } from "@/context/OrderContext"; // Importar el contexto para obtener las órdenes desde Firebase
+import { useOrders } from "@/context/OrderContext";
+import { FieldValue } from "firebase/firestore";
 
 export default function ChefScreen() {
-  const { orders, loading, error, updateOrderStatus } = useOrders(); // Obtener las órdenes y la función para actualizar el estado
+  const { orders, loading, error, updateOrderStatus } = useOrders();
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
+  const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
-  // Filtrar las órdenes para mostrar las que tienen el estado 'Ordered' o 'Preparing'
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getTimePassed = (orderTime: Date | FieldValue | undefined): string => {
+    if (!orderTime) return "N/A";
+
+    let orderDate: Date;
+    if (orderTime instanceof Date) {
+      orderDate = orderTime;
+    } else if (orderTime && "toDate" in orderTime && typeof (orderTime as any).toDate === "function") {
+      orderDate = (orderTime as any).toDate();
+    } else {
+      return "N/A";
+    }
+
+    const diffInMs = currentTime.getTime() - orderDate.getTime();
+    const diffInSeconds = Math.floor(diffInMs / 1000);
+    const diffInMinutes = Math.floor(diffInSeconds / 60);
+    const remainingSeconds = diffInSeconds % 60;
+
+    if (diffInMinutes > 0) {
+      return `${diffInMinutes}m ${remainingSeconds}s`;
+    }
+    return `${remainingSeconds}s`;
+  };
+
   const filteredOrders = orders.filter(
     (order) => order.status === "Ordered" || order.status === "Preparing"
   );
@@ -22,17 +54,16 @@ export default function ChefScreen() {
 
   const changeStatus = async (orderId: string, currentStatus: string) => {
     let newStatus = "";
-    // Definir el nuevo estado según el estado actual
     if (currentStatus === "Ordered") {
       newStatus = "Preparing";
     } else if (currentStatus === "Preparing") {
       newStatus = "Ready";
     } else if (currentStatus === "Ready") {
-      newStatus = "Completed"; // O cualquier otro estado final que desees
+      newStatus = "Completed";
     }
 
     try {
-      await updateOrderStatus(orderId, newStatus); // Llamar a la función del contexto para actualizar el estado en Firebase
+      await updateOrderStatus(orderId, newStatus);
     } catch (err: unknown) {
       if (err instanceof Error) {
         console.error(`Error al cambiar el estado de la orden ${orderId}: ${err.message}`);
@@ -45,14 +76,23 @@ export default function ChefScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.header}>Chef's Orders</Text>
+      <Text style={styles.currentTime}>
+        {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+      </Text>
 
-      {/* Filtros por categoría (si fuera necesario) */}
       <FlatList
         data={filteredOrders}
-        keyExtractor={(item) => (item.id || item.createdAt?.toString()) ?? "no-id"} // Asegurarse de que 'id' esté siempre definido
+        keyExtractor={(item) => (item.id || item.createdAt?.toString()) ?? "no-id"}
         renderItem={({ item }) => (
           <View style={styles.orderCard}>
-            <Text style={styles.orderTimestamp}>Order Time: {item.createdAt?.toLocaleString()}</Text>
+            <View style={styles.orderHeader}>
+              <Text style={styles.orderTimestamp}>
+                {item.createdAt?.toLocaleString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+              </Text>
+              <Text style={styles.timePassed}>
+                {getTimePassed(item.createdAt)} ago
+              </Text>
+            </View>
             <Text style={styles.orderStatus}>Status: {item.status}</Text>
             <Text style={styles.orderTitle}>Items:</Text>
             {item.items.map((orderItem) => (
@@ -86,7 +126,6 @@ export default function ChefScreen() {
         contentContainerStyle={styles.ordersList}
       />
 
-      {/* Mensajes de error o carga */}
       {loading && <Text>Loading orders...</Text>}
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
@@ -106,6 +145,13 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
+  currentTime: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1e3a8a",
+    textAlign: "center",
+    marginBottom: 10,
+  },
   ordersList: {
     paddingBottom: 80,
   },
@@ -120,10 +166,19 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  orderHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
   orderTimestamp: {
     fontSize: 14,
     color: "#64748b",
-    marginBottom: 8,
+  },
+  timePassed: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#ef4444",
   },
   orderStatus: {
     fontSize: 16,
