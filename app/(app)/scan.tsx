@@ -1,4 +1,3 @@
-// app/(app)/client/scan.tsx
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { View, Text, Alert, StyleSheet } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -10,7 +9,6 @@ const [isProcessing, setIsProcessing] = useState(false);
 const lastScannedData = useRef<string | null>(null);
 const scanTimeout = useRef<NodeJS.Timeout | null>(null);
 
-// Limpieza al desmontar
 useEffect(() => {
 return () => {
     if (scanTimeout.current) clearTimeout(scanTimeout.current);
@@ -18,14 +16,11 @@ return () => {
 }, []);
 
 const handleBarCodeScanned = useCallback(({ data }: { data: string }) => {
-// 1. Evitar procesamiento si ya estamos procesando
 if (isProcessing || data === lastScannedData.current) return;
 
-// 2. Bloquear nuevos escaneos temporalmente
 setIsProcessing(true);
 lastScannedData.current = data;
 
-// 3. Extraer solo números
 const tableNumber = data.replace(/\D/g, "");
 
 if (!tableNumber) {
@@ -35,7 +30,6 @@ if (!tableNumber) {
     return;
 }
 
-// 4. Mostrar alerta y manejar navegación
 Alert.alert(
     "Mesa asignada",
     `Estás en la mesa ${tableNumber}`,
@@ -53,7 +47,6 @@ Alert.alert(
     {
     cancelable: false,
     onDismiss: () => {
-        // 5. Reactivar después de 2 segundos (tiempo de enfriamiento)
         scanTimeout.current = setTimeout(() => {
         setIsProcessing(false);
         lastScannedData.current = null;
