@@ -1,7 +1,10 @@
-import React from "react";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, updateProfile, onAuthStateChanged, User as FirebaseUser } from "firebase/auth";
+// context/AuthContext.tsx
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { 
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
+  signOut, updateProfile, onAuthStateChanged, User as FirebaseUser 
+} from "firebase/auth";
 import { getFirestore, doc, setDoc, updateDoc, getDoc } from "firebase/firestore"; 
-import { createContext, useContext, useState, useEffect } from "react";
 import app from "../utils/FirebaseConfig";
 import { router } from "expo-router"; 
 import { User } from "@/interfaces/common";
@@ -68,14 +71,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (email: string, password: string) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  
       const userDocRef = doc(db, "users", userCredential.user.uid);
       const userSnap = await getDoc(userDocRef);
-  
+
       if (userSnap.exists()) {
         const data = userSnap.data() as User;
         setUserData(data);
-        router.replace(`/(app)/${data.role}`);
+
+        // Redirección específica
+        if (data.role === "client") {
+          router.replace("/(app)/scan");
+        } else {
+          router.replace(`/(app)/${data.role}`);
+        }
       } else {
         throw new Error("User data not found");
       }
@@ -87,16 +95,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const register = async (user: User) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        user.email,
-        user.password
-      );
-  
-      await updateProfile(userCredential.user, {
-        displayName: user.name,
-      });
-  
+      const userCredential = await createUserWithEmailAndPassword(auth, user.email, user.password);
+      await updateProfile(userCredential.user, { displayName: user.name });
+
       const userDocRef = doc(db, "users", userCredential.user.uid);
       await setDoc(userDocRef, {
         name: user.name,
@@ -104,12 +105,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         role: user.role,
         createdAt: new Date(),
       });
-  
+
       const userSnap = await getDoc(userDocRef);
       if (userSnap.exists()) {
         const data = userSnap.data() as User;
         setUserData(data);
-        router.replace(`/(app)/${data.role}`);
+
+        if (data.role === "client") {
+          router.replace("/(app)/client");
+        } else {
+          router.replace(`/(app)/${data.role}`);
+        }
       } else {
         throw new Error("User document not found after registration");
       }
@@ -118,22 +124,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       throw error;
     }
   };
-  
 
   const updateUser = async (user: Partial<User>) => {
     if (!firebaseUser) throw new Error("No user logged in");
 
     try {
       if (user.name) {
-        await updateProfile(firebaseUser, {
-          displayName: user.name
-        });
+        await updateProfile(firebaseUser, { displayName: user.name });
       }
 
       const userDocRef = doc(db, "users", firebaseUser.uid);
       await updateDoc(userDocRef, {
         ...user,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
 
       await refreshUserData();
@@ -150,11 +153,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const userDocRef = doc(db, "users", firebaseUser.uid);
       await updateDoc(userDocRef, {
         role,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       });
 
       await refreshUserData();
-      router.replace(`/(app)/${role}`);
+      if (role === "client") {
+        router.replace("/(app)/client");
+      } else {
+        router.replace(`/(app)/${role}`);
+      }
     } catch (error: any) {
       console.error("Update role error:", error.message);
       throw error;

@@ -8,6 +8,7 @@ export default function AppLayout() {
       <Stack.Screen name="cashier" options={{title:"Cashier", headerShown:false}}/>
       <Stack.Screen name="client" options={{title:"Client", headerShown:false}}/>
       <Stack.Screen name="chef" options={{title:"Chef", headerShown:false}}/>
+      <Stack.Screen name="scan" options={{title:"Scan", headerShown:false}}/>
     </Stack>
   );
 }
