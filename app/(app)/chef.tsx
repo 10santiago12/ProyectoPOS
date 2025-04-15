@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, StyleSheet, FlatList } from "react-native";
 import { useOrders } from "@/context/OrderContext";
 import { FieldValue } from "firebase/firestore";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ChefScreen() {
   const { orders, loading, error, updateOrderStatus } = useOrders();
+  const { logout } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
@@ -15,6 +17,14 @@ export default function ChefScreen() {
 
     return () => clearInterval(interval);
   }, []);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+  };
 
   const getTimePassed = (orderTime: Date | FieldValue | undefined): string => {
     if (!orderTime) return "N/A";
@@ -48,6 +58,12 @@ export default function ChefScreen() {
       <View style={styles.container}>
         <Text style={styles.header}>Chef's Orders</Text>
         <Text style={styles.errorText}>No hay órdenes entrantes</Text>
+        <TouchableOpacity 
+          style={[styles.bottomButton, styles.logoutButton]} 
+          onPress={handleLogout}
+        >
+          <Text style={styles.bottomButtonText}>Cerrar Sesión</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -128,6 +144,14 @@ export default function ChefScreen() {
 
       {loading && <Text>Loading orders...</Text>}
       {error && <Text style={styles.errorText}>{error}</Text>}
+
+      {/* Botón de Logout */}
+      <TouchableOpacity 
+        style={[styles.bottomButton, styles.logoutButton]} 
+        onPress={handleLogout}
+      >
+        <Text style={styles.bottomButtonText}>Cerrar Sesión</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -219,5 +243,19 @@ const styles = StyleSheet.create({
   errorText: {
     color: "#B22222", // Firebrick red
     fontWeight: "bold",
+  },
+  bottomButton: {
+    padding: 15,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  logoutButton: {
+    backgroundColor: "#ef4444",
+  },
+  bottomButtonText: {
+    color: "#ffffff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });
