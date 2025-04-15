@@ -156,7 +156,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       await refreshUserData();
       if (role === "client") {
-        router.replace("/(app)/client");
+        router.replace("/(app)/scan");
       } else {
         router.replace(`/(app)/${role}`);
       }
