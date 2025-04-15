@@ -39,3 +39,20 @@ export interface Order {
     createdAt?: Date | FieldValue;
     updatedAt?: Date | FieldValue;
 }
+
+export interface OrderContextType {
+    cart: OrderItem[];
+    addToCart: (product: OrderItem) => void;
+    removeFromCart: (productId: string) => void;
+    updateQuantity: (productId: string, newQuantity: number) => void;
+    clearCart: () => void;
+    createOrder: (notes?: string) => Promise<string>;
+    currentOrder: Order | null;
+    orders: Order[];
+    getCartTotal: () => number;
+    getItemCount: () => number;
+    loading: boolean;
+    error: string | null;
+    updateOrderStatus: (orderId: string, newStatus: string) => Promise<void>;
+    getActiveOrders: () => Order[];
+    }

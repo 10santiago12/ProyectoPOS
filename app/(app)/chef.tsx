@@ -7,7 +7,6 @@ import { useAuth } from "@/context/AuthContext";
 export default function ChefScreen() {
   const { orders, loading, error, updateOrderStatus } = useOrders();
   const { logout } = useAuth();
-  const [selectedCategory, setSelectedCategory] = useState<string>("Todos");
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
 
   useEffect(() => {
@@ -22,7 +21,7 @@ export default function ChefScreen() {
     try {
       await logout();
     } catch (error) {
-      console.error("Error al cerrar sesión:", error);
+      console.error("Error logging out:", error);
     }
   };
 
@@ -57,12 +56,12 @@ export default function ChefScreen() {
     return (
       <View style={styles.container}>
         <Text style={styles.header}>Chef's Orders</Text>
-        <Text style={styles.errorText}>No hay órdenes entrantes</Text>
+        <Text style={styles.errorText}>No incoming orders</Text>
         <TouchableOpacity 
           style={[styles.bottomButton, styles.logoutButton]} 
           onPress={handleLogout}
         >
-          <Text style={styles.bottomButtonText}>Cerrar Sesión</Text>
+          <Text style={styles.bottomButtonText}>logout</Text>
         </TouchableOpacity>
       </View>
     );
@@ -82,9 +81,9 @@ export default function ChefScreen() {
       await updateOrderStatus(orderId, newStatus);
     } catch (err: unknown) {
       if (err instanceof Error) {
-        console.error(`Error al cambiar el estado de la orden ${orderId}: ${err.message}`);
+        console.error(`Error changing the status of order ${orderId}: ${err.message}`);
       } else {
-        console.error(`Error al cambiar el estado de la orden ${orderId}: ${err}`);
+        console.error(`Error changing the status of order ${orderId}: ${err}`);
       }
     }
   };
@@ -150,7 +149,7 @@ export default function ChefScreen() {
         style={[styles.bottomButton, styles.logoutButton]} 
         onPress={handleLogout}
       >
-        <Text style={styles.bottomButtonText}>Cerrar Sesión</Text>
+        <Text style={styles.bottomButtonText}>Logout</Text>
       </TouchableOpacity>
     </View>
   );
@@ -159,20 +158,21 @@ export default function ChefScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF5EC", // Warm cream
+    backgroundColor: "#FFF5EC",
     padding: 16,
   },
   header: {
+    paddingTop: 40,
     fontSize: 28,
     fontWeight: "bold",
-    color: "#5D2E0C", // Dark brown
+    color: "#5D2E0C",
     marginBottom: 20,
     textAlign: "center",
   },
   currentTime: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#A0522D", // Sienna
+    color: "#A0522D",
     textAlign: "center",
     marginBottom: 10,
   },
@@ -180,11 +180,11 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   orderCard: {
-    backgroundColor: "#FFFAF0", // White cream
+    backgroundColor: "#FFFAF0",
     borderRadius: 12,
     marginBottom: 16,
     padding: 16,
-    shadowColor: "#8B0000", // Deep red shadow
+    shadowColor: "#8B0000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -197,51 +197,51 @@ const styles = StyleSheet.create({
   },
   orderTimestamp: {
     fontSize: 14,
-    color: "#A0522D", // Sienna
+    color: "#A0522D", 
   },
   timePassed: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "#FF6347", // Tomato red
+    color: "#FF6347",
   },
   orderStatus: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#CD853F", // Peru (brownish)
+    color: "#CD853F",
     marginBottom: 8,
   },
   orderTitle: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
-    color: "#5D2E0C", // Dark brown
+    color: "#5D2E0C",
   },
   orderItem: {
     fontSize: 16,
-    color: "#A0522D", // Sienna
+    color: "#A0522D",
     marginBottom: 4,
   },
   statusButtons: {
     marginTop: 10,
   },
   button: {
-    backgroundColor: "#FF7F50", // Coral
+    backgroundColor: "#FF7F50",
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,
     alignItems: "center",
   },
   buttonText: {
-    color: "#FFFAF0", // White cream
+    color: "#FFFAF0",
     fontWeight: "bold",
   },
   doneText: {
-    color: "#CD853F", // Peru (brownish)
+    color: "#CD853F",
     fontSize: 16,
     fontWeight: "bold",
   },
   errorText: {
-    color: "#B22222", // Firebrick red
+    color: "#B22222",
     fontWeight: "bold",
   },
   bottomButton: {

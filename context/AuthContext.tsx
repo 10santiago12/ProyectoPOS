@@ -1,4 +1,3 @@
-// context/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { 
   getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
@@ -78,7 +77,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const data = userSnap.data() as User;
         setUserData(data);
 
-        // Redirección específica
         if (data.role === "client") {
           router.replace("/(app)/scan");
         } else {

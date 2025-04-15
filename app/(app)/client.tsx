@@ -21,19 +21,19 @@ export default function CustomerScreen() {
     error: ordersError 
   } = useOrders();
   
-  const [selectedCategory, setSelectedCategory] = useState<ProductType | 'Todos'>('Todos');
+  const [selectedCategory, setSelectedCategory] = useState<ProductType | 'All'>('All');
   const [showOrders, setShowOrders] = useState(false);
 
-  const categories: (ProductType | 'Todos')[] = ['Todos', 'starter', 'fastfood', 'drink', 'dessert'];
+  const categories: (ProductType | 'All')[] = ['All', 'starter', 'fastfood', 'drink', 'dessert'];
   const categoryLabels = {
-    'Todos': 'Todos',
-    'starter': 'Entradas',
-    'fastfood': 'Comida rápida',
-    'drink': 'Bebidas',
-    'dessert': 'Postres'
+    'All': 'All',
+    'starter': 'Starter',
+    'fastfood': 'Fast Food',
+    'drink': 'Drinks',
+    'dessert': 'Desserts'
   };
 
-  const filteredProducts = selectedCategory === 'Todos' 
+  const filteredProducts = selectedCategory === 'All' 
     ? products 
     : products.filter(product => product.type === selectedCategory);
 
@@ -76,28 +76,28 @@ export default function CustomerScreen() {
   const handleSubmitOrder = async () => {
     try {
       if (orderCart.length === 0) {
-        Alert.alert('Carrito vacío', 'Agrega productos al carrito antes de ordenar');
+        Alert.alert('Empty Cart', 'Please add products to the cart before placing an order');
         return;
       }
 
       const orderId = await createOrder();
       
       Alert.alert(
-        '¡Orden creada!', 
-        `Tu orden #${orderId.substring(0, 6)} ha sido recibida con éxito`,
+        'Order Created!', 
+        `Your order #${orderId.substring(0, 6)} has been successfully received`,
         [
           { 
-            text: 'Aceptar',
+            text: 'OK',
             onPress: () => clearCart()
           }
         ]
       );
       
     } catch (error) {
-      console.error('Error al crear orden:', error);
+      console.error('Error creating order:', error);
       Alert.alert(
         'Error', 
-        'No se pudo crear la orden. Por favor intenta nuevamente'
+        'The order could not be created. Please try again'
       );
     }
   };
@@ -106,14 +106,14 @@ export default function CustomerScreen() {
     try {
       await logout();
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
+      console.error('Error logging out:', error);
     }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.header}>🍔 Menú Digital</Text>
+        <Text style={styles.header}>🍔 Digital Menu</Text>
 
         <View style={styles.categoriesWrapper}>
           <ScrollView 
@@ -192,7 +192,7 @@ export default function CustomerScreen() {
             contentContainerStyle={styles.productsContainer}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No hay productos en esta categoría</Text>
+                <Text style={styles.emptyText}>No products available in this category</Text>
               </View>
             }
           />
@@ -201,7 +201,7 @@ export default function CustomerScreen() {
         {orderCart.length > 0 && (
           <View style={styles.cartContainer}>
             <View style={styles.cartHeader}>
-              <Text style={styles.cartTitle}>🛒 Tu Pedido</Text>
+              <Text style={styles.cartTitle}>🛒 Your Order</Text>
               <Text style={styles.cartTotal}>Total: ${getCartTotal().toLocaleString()}</Text>
             </View>
 
@@ -230,7 +230,7 @@ export default function CustomerScreen() {
               {ordersLoading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.orderButtonText}>Realizar Pedido</Text>
+                <Text style={styles.orderButtonText}>Make Order</Text>
               )}
             </TouchableOpacity>
           </View>
@@ -241,14 +241,14 @@ export default function CustomerScreen() {
             style={[styles.bottomButton, styles.ordersButton]} 
             onPress={() => setShowOrders(true)}
           >
-            <Text style={styles.bottomButtonText}>Mis Órdenes</Text>
+            <Text style={styles.bottomButtonText}>My Orders</Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
             style={[styles.bottomButton, styles.logoutButton]} 
             onPress={handleLogout}
           >
-            <Text style={styles.bottomButtonText}>Cerrar Sesión</Text>
+            <Text style={styles.bottomButtonText}>Logout</Text>
           </TouchableOpacity>
         </View>
 
@@ -260,7 +260,7 @@ export default function CustomerScreen() {
         >
           <SafeAreaView style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Mis Órdenes</Text>
+              <Text style={styles.modalTitle}>My Orders</Text>
               <TouchableOpacity 
                 style={styles.closeButton}
                 onPress={() => setShowOrders(false)}
@@ -275,7 +275,7 @@ export default function CustomerScreen() {
               <Text style={styles.errorText}>{ordersError}</Text>
             ) : userOrders.length === 0 ? (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No tienes órdenes aún</Text>
+                <Text style={styles.emptyText}>You don't have any orders yet</Text>
               </View>
             ) : (
               <FlatList
@@ -287,7 +287,7 @@ export default function CustomerScreen() {
                 renderItem={({ item }) => (
                   <View style={styles.orderCard}>
                     <View style={styles.orderHeader}>
-                      <Text style={styles.orderId}>Orden #{(item.id ?? '').substring(0, 6)}</Text>
+                      <Text style={styles.orderId}>Order #{(item.id ?? '').substring(0, 6)}</Text>
                       <Text style={[
                         styles.orderStatus,
                         item.status === 'Preparing' && styles.statusPreparing,
@@ -295,13 +295,13 @@ export default function CustomerScreen() {
                         item.status === 'Delivered' && styles.statusCompleted,
                         item.status === 'Cancelled' && styles.statusCancelled,
                       ]}>
-                        {item.status === 'Ordered' ? 'En espera' : 
-                         item.status === 'Preparing' ? 'En preparación' : 
-                         item.status === 'Delivered' ? 'Completada' : 'Completada'}
+                        {item.status === 'Ordered' ? 'Pending' : 
+                        item.status === 'Preparing' ? 'Preparing' : 
+                        item.status === 'Delivered' ? 'Completed' : 'Completed'}
                       </Text>
                     </View>
                     
-                    <Text style={styles.orderDate}>{item.createdAt ? formatDate(item.createdAt as Date) : 'Fecha no disponible'}</Text>
+                    <Text style={styles.orderDate}>{item.createdAt ? formatDate(item.createdAt as Date) : 'Date not Available'}</Text>
                     <Text style={styles.orderTotal}>Total: ${item.total.toLocaleString()}</Text>
                     
                     <View style={styles.orderItemsContainer}>

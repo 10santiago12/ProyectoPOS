@@ -24,15 +24,15 @@ lastScannedData.current = data;
 const tableNumber = data.replace(/\D/g, "");
 
 if (!tableNumber) {
-    Alert.alert("QR inválido", "Debe contener un número de mesa", [
+    Alert.alert("Invalid QR", "It must contain a table number", [
     { text: "OK", onPress: () => setIsProcessing(false) }
     ]);
     return;
 }
 
 Alert.alert(
-    "Mesa asignada",
-    `Estás en la mesa ${tableNumber}`,
+    "Table Assigned",
+    `You are at table ${tableNumber}`,
     [
     {
         text: "OK",
@@ -56,8 +56,8 @@ Alert.alert(
 );
 }, [isProcessing]);
 
-if (!permission) return <Text>Cargando...</Text>;
-if (!permission.granted) return <Text>Se necesita permiso de cámara</Text>;
+if (!permission) return <Text>Loading...</Text>;
+if (!permission.granted) return <Text>Camera permission is required</Text>;
 
 return (
 <View style={styles.container}>
@@ -68,11 +68,11 @@ return (
     style={StyleSheet.absoluteFillObject}
     >
     <View style={styles.overlay}>
-        <Text style={styles.instruction}>Escanea el QR de tu mesa</Text>
+        <Text style={styles.instruction}>Scan your table's QR code</Text>
         <View style={styles.qrFrame} />
         {isProcessing && (
         <View style={styles.processingOverlay}>
-            <Text style={styles.processingText}>Procesando...</Text>
+            <Text style={styles.processingText}>Processing...</Text>
         </View>
         )}
     </View>

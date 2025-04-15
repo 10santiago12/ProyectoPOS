@@ -1,33 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, where, updateDoc, doc, DocumentData, orderBy } from "firebase/firestore";
-import { useAuth } from "@/context/AuthContext";
+import { getFirestore, collection, addDoc, serverTimestamp, onSnapshot, query, updateDoc, doc, DocumentData, orderBy } from "firebase/firestore";
 import app from "../utils/FirebaseConfig";
-import { Order, OrderItem } from "@/interfaces/common";
+import { Order, OrderItem, OrderContextType } from "@/interfaces/common";
 import { getAuth } from "firebase/auth";
-
-interface OrderContextType {
-cart: OrderItem[];
-addToCart: (product: OrderItem) => void;
-removeFromCart: (productId: string) => void;
-updateQuantity: (productId: string, newQuantity: number) => void;
-clearCart: () => void;
-createOrder: (notes?: string) => Promise<string>;
-currentOrder: Order | null;
-orders: Order[];
-getCartTotal: () => number;
-getItemCount: () => number;
-loading: boolean;
-error: string | null;
-updateOrderStatus: (orderId: string, newStatus: string) => Promise<void>;
-getActiveOrders: () => Order[];
-}
 
 const OrderContext = createContext<OrderContextType>({} as OrderContextType);
 
 export const useOrders = () => useContext(OrderContext);
 
 export const OrdersProvider = ({ children }: { children: React.ReactNode }) => {
-const { user } = useAuth();
 const [cart, setCart] = useState<OrderItem[]>([]);
 const [orders, setOrders] = useState<Order[]>([]);
 const [currentOrder, setCurrentOrder] = useState<Order | null>(null);
@@ -197,7 +178,6 @@ const updateOrderStatus = async (orderId: string, newStatus: string) => {
     }
 };
 
-// Obtener órdenes activas para el chef
 const getActiveOrders = () => {
     return orders.filter(order => 
     ["Ordered", "Preparing", "Ready"].includes(order.status)

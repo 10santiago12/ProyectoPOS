@@ -19,7 +19,7 @@ export default function CashierScreen() {
 
   const handleSaveProduct = async () => {
     if (!title || !price) {
-      Alert.alert("Error", "Por favor complete al menos el título y el precio");
+      Alert.alert("Error", "Please complete at least the title and price");
       return;
     }
 
@@ -36,9 +36,9 @@ export default function CashierScreen() {
       setPrice("");
       setPhotoUri(null);
       
-      Alert.alert("Éxito", "Producto guardado correctamente");
+      Alert.alert("Success", "Product saved successfully");
     } catch (error) {
-      Alert.alert("Error", "No se pudo guardar el producto");
+      Alert.alert("Error", "Could not save the product");
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -49,10 +49,10 @@ export default function CashierScreen() {
     setIsLoading(true);
     try {
       await deleteProduct(id);
-      Alert.alert("Éxito", "Producto eliminado correctamente");
+      Alert.alert("Success", "Product deleted successfully");
     } catch (error) {
-      Alert.alert("Error", "No se pudo eliminar el producto");
-      console.error("Error al eliminar:", error);
+      Alert.alert("Error", "Could not delete the product");
+      console.error("Error deleting:", error);
     } finally {
       setIsLoading(false);
     }
@@ -63,41 +63,41 @@ export default function CashierScreen() {
       await logout();
       router.replace("/auth");
     } catch (error) {
-      Alert.alert("Error", "No se pudo cerrar la sesión");
-      console.error("Error al cerrar sesión:", error);
+      Alert.alert("Error", "Could not log out");
+      console.error("Error logging out:", error);
     }
   };
 
   const handleTakePhoto = async () => {
-  if (Platform.OS === 'web') {
-    const file = await new Promise<File | null>((resolve) => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = 'image/*';
-      input.capture = 'environment';
-      input.onchange = () => resolve(input.files?.[0] || null);
-      input.click();
-    });
+    if (Platform.OS === 'web') {
+      const file = await new Promise<File | null>((resolve) => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*';
+        input.capture = 'environment';
+        input.onchange = () => resolve(input.files?.[0] || null);
+        input.click();
+      });
 
-    if (file) {
-      const webUri = URL.createObjectURL(file);
-      setPhotoUri(webUri);
-      return webUri;
+      if (file) {
+        const webUri = URL.createObjectURL(file);
+        setPhotoUri(webUri);
+        return webUri;
+      }
+      return undefined;
+    } else {
+      const uri = await takePhoto();
+      if (uri) setPhotoUri(uri);
+      return uri;
     }
-    return undefined;
-  } else {
-    const uri = await takePhoto();
-    if (uri) setPhotoUri(uri);
-    return uri;
-  }
-};
+  };
 
   const handlePickImage = async () => {
     try {
       const uri = await pickImage();
       if (uri) setPhotoUri(uri);
     } catch (error) {
-      Alert.alert("Error", "No se pudo acceder a la galería");
+      Alert.alert("Error", "Could not access the gallery");
       console.error(error);
     }
   };
@@ -105,7 +105,7 @@ export default function CashierScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>🧾 Agregar Producto</Text>
+      <Text style={styles.header}>🧾 Add Product</Text>
 
       <View style={styles.photoSection}>
         {photoUri ? (
@@ -115,7 +115,7 @@ export default function CashierScreen() {
               style={styles.removePhotoButton} 
               onPress={() => setPhotoUri(null)}
             >
-              <Text style={styles.removePhotoText}>❌ Eliminar foto</Text>
+              <Text style={styles.removePhotoText}>❌ Delete Photo</Text>
             </TouchableOpacity>
           </View>
         ) : (
@@ -125,14 +125,14 @@ export default function CashierScreen() {
               onPress={handleTakePhoto}
               disabled={isLoading}
             >
-              <Text style={styles.photoButtonText}>📷 Tomar Foto</Text>
+              <Text style={styles.photoButtonText}>📷 Take Photo</Text>
             </TouchableOpacity>
             <TouchableOpacity 
               style={styles.photoButton} 
               onPress={handlePickImage}
               disabled={isLoading}
             >
-              <Text style={styles.photoButtonText}>🖼️ Elegir de Galería</Text>
+              <Text style={styles.photoButtonText}>🖼️ Choose From Gallery</Text>
             </TouchableOpacity>
           </>
         )}
@@ -140,7 +140,7 @@ export default function CashierScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder="Título del producto*"
+        placeholder="Product Title*"
         value={title}
         onChangeText={setTitle}
         placeholderTextColor="#94a3b8"
@@ -149,7 +149,7 @@ export default function CashierScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder="Descripción"
+        placeholder="Description"
         value={description}
         onChangeText={setDescription}
         multiline
@@ -163,16 +163,16 @@ export default function CashierScreen() {
           onValueChange={(itemValue: ProductType) => setType(itemValue)}
           mode="dropdown"
         >
-          <Picker.Item label="Entrante" value="starter" />
-          <Picker.Item label="Comida rápida" value="fastfood" />
-          <Picker.Item label="Bebida" value="drink" />
-          <Picker.Item label="Postre" value="dessert" />
+          <Picker.Item label="Starter" value="starter" />
+          <Picker.Item label="Fast Food" value="fastfood" />
+          <Picker.Item label="Drink" value="drink" />
+          <Picker.Item label="Dessert" value="dessert" />
         </Picker>
       </View>
 
       <TextInput
         style={styles.input}
-        placeholder="Precio*"
+        placeholder="Price*"
         keyboardType="numeric"
         value={price}
         onChangeText={setPrice}
@@ -188,11 +188,11 @@ export default function CashierScreen() {
         {isLoading ? (
           <ActivityIndicator color="#ffffff" />
         ) : (
-          <Text style={styles.saveButtonText}>💾 Guardar Producto</Text>
+          <Text style={styles.saveButtonText}>💾 Save Product </Text>
         )}
       </TouchableOpacity>
 
-      <Text style={styles.sectionTitle}>🧺 Productos Agregados</Text>
+      <Text style={styles.sectionTitle}> Saved Products </Text>
 
       <FlatList
         data={products}
@@ -202,8 +202,8 @@ export default function CashierScreen() {
             <View style={{ flex: 1 }}>
               <Text style={styles.productTitle}>{item.title}</Text>
               <Text style={styles.productText}>{item.description}</Text>
-              <Text style={styles.productText}>Tipo: {item.type}</Text>
-              <Text style={styles.productText}>Precio: ${item.price}</Text>
+              <Text style={styles.productText}>Type: {item.type}</Text>
+              <Text style={styles.productText}>Price: ${item.price}</Text>
               {item.photo && (
                 <Image 
                   source={{ uri: item.photo }} 
@@ -217,7 +217,7 @@ export default function CashierScreen() {
                 onPress={() => handleDeleteProduct(item.id!)}
                 disabled={isLoading}
               >
-                <Text style={styles.deleteButtonText}>🗑️ Eliminar</Text>
+                <Text style={styles.deleteButtonText}>🗑️ Delete</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -230,7 +230,7 @@ export default function CashierScreen() {
           onPress={handleLogout}
           disabled={isLoading}
         >
-          <Text style={styles.logoutButtonText}>Cerrar Sesión</Text>
+          <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -240,7 +240,7 @@ export default function CashierScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#FFF5EC', // Warm cream background
+    backgroundColor: '#FFF5EC',
   },
   container: {
     flexGrow: 1,
@@ -249,17 +249,17 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   pickerContainer: {
-    backgroundColor: "#FFFAF0", // Softer cream for inputs
+    backgroundColor: "#FFFAF0",
     borderRadius: 10,
     padding: 8,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#E9967A", // Soft red-brown border
+    borderColor: "#E9967A",
   },
   header: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#8B0000", // Deep red for headers
+    color: "#8B0000",
     marginBottom: 32,
     textAlign: "center",
   },
@@ -269,18 +269,18 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   photoButton: {
-    backgroundColor: "#FFCC99", // Soft orange for buttons
+    backgroundColor: "#FFCC99",
     padding: 14,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#FF9966", // Darker orange border
+    borderColor: "#FF9966",
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
     marginHorizontal: 5,
   },
   photoButtonText: {
-    color: "#8B0000", // Deep red text
+    color: "#8B0000",
     fontWeight: "600",
     fontSize: 14,
   },
@@ -289,13 +289,13 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 16,
     marginBottom: 16,
-    color: "#5D2E0C", // Dark brown text
+    color: "#5D2E0C",
     fontSize: 16,
     borderWidth: 1,
     borderColor: "#E9967A", 
   },
   saveButton: {
-    backgroundColor: "#FF6347", // Tomato red
+    backgroundColor: "#FF6347",
     padding: 16,
     borderRadius: 12,
     marginBottom: 32,
@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   disabledButton: {
-    backgroundColor: "#CD853F", // Peru (brownish) for disabled state
+    backgroundColor: "#CD853F",
   },
   saveButtonText: {
     color: "#FFFAF0",
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#8B0000", // Deep red
+    color: "#8B0000",
     marginBottom: 24,
   },
   productCard: {
@@ -339,11 +339,11 @@ const styles = StyleSheet.create({
   productTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#5D2E0C", // Dark brown
+    color: "#5D2E0C",
     marginBottom: 4,
   },
   productText: {
-    color: "#A0522D", // Sienna (brown)
+    color: "#A0522D",
     fontSize: 14,
     marginBottom: 2,
   },
@@ -354,7 +354,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   editButton: {
-    backgroundColor: "#FFE4B5", // Moccasin (light peachy)
+    backgroundColor: "#FFE4B5",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   editButtonText: {
-    color: "#8B0000", // Deep red
+    color: "#8B0000",
     fontWeight: "600",
     fontSize: 13,
   },
@@ -384,12 +384,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   removePhotoButton: {
-    backgroundColor: '#FFC0CB', // Pink
+    backgroundColor: '#FFC0CB',
     padding: 8,
     borderRadius: 6,
   },
   removePhotoText: {
-    color: '#8B0000', // Deep red
+    color: '#8B0000',
     fontWeight: '600',
   },
   buttonsContainer: {
@@ -397,20 +397,20 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   deleteButton: {
-    backgroundColor: "#FFA07A", // Light salmon
+    backgroundColor: "#FFA07A",
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#FF7F50", // Coral
+    borderColor: "#FF7F50",
   },
   deleteButtonText: {
-    color: "#8B0000", // Deep red
+    color: "#8B0000",
     fontWeight: "600",
     fontSize: 13,
   },
   logoutButton: {
-    backgroundColor: '#B22222', // Firebrick red
+    backgroundColor: '#B22222',
     padding: 16,
     borderRadius: 14,
     alignItems: 'center',
