@@ -110,7 +110,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUserData(data);
 
         if (data.role === "client") {
-          router.replace("/(app)/client");
+          router.replace("/(app)/scan");
         } else {
           router.replace(`/(app)/${data.role}`);
         }
