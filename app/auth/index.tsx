@@ -140,10 +140,11 @@ export default function LoginScreen() {
   );
 }
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f2f2f2',
+    backgroundColor: '#FFF5EC', // Warm cream
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
@@ -152,39 +153,39 @@ const styles = StyleSheet.create({
     fontSize: 24,
     marginBottom: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#5D2E0C', // Dark brown
   },
   input: {
     width: '100%',
     height: 50,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFAF0', // Softer cream
     borderRadius: 8,
     paddingHorizontal: 15,
     marginBottom: 15,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#CD853F', // Peru (brownish)
   },
   pickerContainer: {
     width: '100%',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFAF0', // Softer cream
     borderRadius: 8,
     marginBottom: 15,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#CD853F', // Peru (brownish)
     overflow: 'hidden',
   },
   button: {
     width: '100%',
     height: 50,
-    backgroundColor: '#6200ee',
+    backgroundColor: '#8B0000', // Deep red
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 10,
   },
   buttonText: {
-    color: '#fff',
+    color: '#FFF5EC', // Warm cream
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -192,12 +193,12 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   switchButtonText: {
-    color: '#6200ee',
+    color: '#FF6347', // Tomato red
     fontSize: 14,
     fontWeight: '500',
   },
   errorText: {
-    color: 'red',
+    color: '#B22222', // Firebrick red
     fontSize: 14,
     marginBottom: 10,
   },

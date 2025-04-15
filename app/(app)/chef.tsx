@@ -135,20 +135,20 @@ export default function ChefScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#FFF5EC", // Warm cream
     padding: 16,
   },
   header: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#1e3a8a",
+    color: "#5D2E0C", // Dark brown
     marginBottom: 20,
     textAlign: "center",
   },
   currentTime: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#1e3a8a",
+    color: "#A0522D", // Sienna
     textAlign: "center",
     marginBottom: 10,
   },
@@ -156,11 +156,11 @@ const styles = StyleSheet.create({
     paddingBottom: 80,
   },
   orderCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#FFFAF0", // White cream
     borderRadius: 12,
     marginBottom: 16,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: "#8B0000", // Deep red shadow
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -173,51 +173,51 @@ const styles = StyleSheet.create({
   },
   orderTimestamp: {
     fontSize: 14,
-    color: "#64748b",
+    color: "#A0522D", // Sienna
   },
   timePassed: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "#ef4444",
+    color: "#FF6347", // Tomato red
   },
   orderStatus: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#3b82f6",
+    color: "#CD853F", // Peru (brownish)
     marginBottom: 8,
   },
   orderTitle: {
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
-    color: "#0f172a",
+    color: "#5D2E0C", // Dark brown
   },
   orderItem: {
     fontSize: 16,
-    color: "#475569",
+    color: "#A0522D", // Sienna
     marginBottom: 4,
   },
   statusButtons: {
     marginTop: 10,
   },
   button: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#FF7F50", // Coral
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,
     alignItems: "center",
   },
   buttonText: {
-    color: "#ffffff",
+    color: "#FFFAF0", // White cream
     fontWeight: "bold",
   },
   doneText: {
-    color: "#10b981",
+    color: "#CD853F", // Peru (brownish)
     fontSize: 16,
     fontWeight: "bold",
   },
   errorText: {
-    color: "red",
+    color: "#B22222", // Firebrick red
     fontWeight: "bold",
   },
 });

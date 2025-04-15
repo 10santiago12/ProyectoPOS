@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useProducts } from "@/context/ProductContext";
 import { router } from "expo-router";
-import {View,Text,TextInput,TouchableOpacity,StyleSheet,ScrollView,FlatList,Image,Alert,ActivityIndicator,Platform} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, FlatList, Image, Alert, ActivityIndicator, Platform } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { ProductType } from "@/interfaces/common";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -240,26 +240,26 @@ export default function CashierScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#FFF5EC', // Warm cream background
   },
   container: {
     flexGrow: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#FFF5EC',
     paddingHorizontal: 16,
     paddingBottom: 20,
   },
   pickerContainer: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#FFFAF0", // Softer cream for inputs
     borderRadius: 10,
     padding: 8,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
+    borderColor: "#E9967A", // Soft red-brown border
   },
   header: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#1e3a8a",
+    color: "#8B0000", // Deep red for headers
     marginBottom: 32,
     textAlign: "center",
   },
@@ -269,48 +269,48 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   photoButton: {
-    backgroundColor: "#e0f2fe",
+    backgroundColor: "#FFCC99", // Soft orange for buttons
     padding: 14,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#bae6fd",
+    borderColor: "#FF9966", // Darker orange border
     alignItems: "center",
     justifyContent: "center",
     flex: 1,
     marginHorizontal: 5,
   },
   photoButtonText: {
-    color: "#0369a1",
+    color: "#8B0000", // Deep red text
     fontWeight: "600",
     fontSize: 14,
   },
   input: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#FFFAF0",
     borderRadius: 10,
     padding: 16,
     marginBottom: 16,
-    color: "#0f172a",
+    color: "#5D2E0C", // Dark brown text
     fontSize: 16,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
+    borderColor: "#E9967A", 
   },
   saveButton: {
-    backgroundColor: "#3b82f6",
+    backgroundColor: "#FF6347", // Tomato red
     padding: 16,
     borderRadius: 12,
     marginBottom: 32,
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: "#8B0000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 3,
   },
   disabledButton: {
-    backgroundColor: "#9ca3af",
+    backgroundColor: "#CD853F", // Peru (brownish) for disabled state
   },
   saveButtonText: {
-    color: "#ffffff",
+    color: "#FFFAF0",
     fontWeight: "bold",
     fontSize: 16,
     textTransform: "uppercase",
@@ -318,32 +318,32 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 22,
     fontWeight: "bold",
-    color: "#1e3a8a",
+    color: "#8B0000", // Deep red
     marginBottom: 24,
   },
   productCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#FFFAF0",
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
     flexDirection: "row",
     alignItems: "center",
-    borderColor: "#e2e8f0",
+    borderColor: "#E9967A",
     borderWidth: 1,
-    shadowColor: "#000",
+    shadowColor: "#A0522D",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.08,
     shadowRadius: 2,
     elevation: 1,
   },
   productTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#0f172a",
+    color: "#5D2E0C", // Dark brown
     marginBottom: 4,
   },
   productText: {
-    color: "#64748b",
+    color: "#A0522D", // Sienna (brown)
     fontSize: 14,
     marginBottom: 2,
   },
@@ -354,16 +354,16 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   editButton: {
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#FFE4B5", // Moccasin (light peachy)
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#cbd5e1",
+    borderColor: "#FFDAB9",
     marginLeft: 12,
   },
   editButtonText: {
-    color: "#1d4ed8",
+    color: "#8B0000", // Deep red
     fontWeight: "600",
     fontSize: 13,
   },
@@ -384,12 +384,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   removePhotoButton: {
-    backgroundColor: '#fee2e2',
+    backgroundColor: '#FFC0CB', // Pink
     padding: 8,
     borderRadius: 6,
   },
   removePhotoText: {
-    color: '#b91c1c',
+    color: '#8B0000', // Deep red
     fontWeight: '600',
   },
   buttonsContainer: {
@@ -397,33 +397,33 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   deleteButton: {
-    backgroundColor: "#fee2e2",
+    backgroundColor: "#FFA07A", // Light salmon
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#fecaca",
+    borderColor: "#FF7F50", // Coral
   },
   deleteButtonText: {
-    color: "#b91c1c",
+    color: "#8B0000", // Deep red
     fontWeight: "600",
     fontSize: 13,
   },
   logoutButton: {
-    backgroundColor: '#ef4444',
+    backgroundColor: '#B22222', // Firebrick red
     padding: 16,
     borderRadius: 14,
     alignItems: 'center',
     marginTop: 20,
     marginBottom: 30,
-    shadowColor: '#ef4444',
+    shadowColor: '#FF6347',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
     elevation: 5,
   },
   logoutButtonText: {
-    color: '#ffffff',
+    color: '#FFFAF0',
     fontWeight: 'bold',
     fontSize: 16,
   },
